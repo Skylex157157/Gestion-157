@@ -50,7 +50,10 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
           <div>
             <h2>{encuentro.nombre}</h2>
             <div className="fechas">
-              {fechaCorta(encuentro.fechaInicio)} - {fechaCorta(encuentro.fechaFin)}
+              {fechaCorta(encuentro.fechaInicio)} - {fechaCorta(encuentro.fechaFin)}{' '}
+              <span className={`chip ${encuentro.cerrado ? 'gris' : ''}`} style={{ marginLeft: 4 }}>
+                {encuentro.cerrado ? 'Cerrado' : 'Abierto'}
+              </span>
             </div>
           </div>
           <button className="icon-btn" aria-label="Editar encuentro" onClick={() => navigate('/encuentro')}>

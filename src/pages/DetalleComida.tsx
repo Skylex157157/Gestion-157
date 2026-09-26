@@ -49,6 +49,7 @@ export default function DetalleComida() {
           <h2>
             {fechaLarga(comida.fecha)} - {NOMBRE_TIPO[comida.tipo]}
           </h2>
+          {comida.menu && <div className="sub menu-comida">{comida.menu}</div>}
           <div className="sub">
             {comida.asistentes.length} comensales
             {r.ninos > 0 && ` (${r.ninos} ${r.ninos === 1 ? 'chico no paga' : 'chicos no pagan'})`}
@@ -64,12 +65,20 @@ export default function DetalleComida() {
         </div>
       )}
 
+      {r.fondo < 0 && !r.sinPagantes && (
+        <div className="aviso rojo">
+          <AlertTriangle size={20} />
+          El precio fijo no alcanza para cubrir el gasto: faltan {dinero(-r.fondo)}, que salen del fondo común.
+        </div>
+      )}
+
       <div className="seccion-titulo">Resumen de la comida</div>
       <div className="lista">
         <KV k="Gasto real total" v={dinero(r.gastoReal)} />
-        <KV k="Cobro por persona" v={dinero(r.cobroPorPersona)} />
+        {r.pagantes > 0 && <KV k="Costo real por persona" v={dinero(r.gastoReal / r.pagantes)} />}
+        <KV k={r.esPrecioFijo ? 'Cobro por persona (precio fijo)' : 'Cobro por persona'} v={dinero(r.cobroPorPersona)} />
         <KV k={`Recaudado (${r.pagantes} x ${dinero(r.cobroPorPersona)})`} v={dinero(r.recaudado)} />
-        <KV k="Diferencia (fondo común)" v={dinero(r.fondo)} clase="destacado" />
+        <KV k="Diferencia (fondo común)" v={dinero(r.fondo)} clase={r.fondo < 0 ? 'alerta' : 'destacado'} />
       </div>
 
       <div className="seccion-titulo">

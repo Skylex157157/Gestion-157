@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Plus, Utensils } from 'lucide-react';
+import { Banknote, ChefHat, ChevronRight, Plus, Utensils } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenGeneral } from '../lib/calculos';
-import { dinero, NOMBRE_TIPO, nombreComida, nuevoId, TIPOS_COMIDA } from '../lib/formato';
+import { dinero, NOMBRE_TIPO, nombreComida, nuevoId, parsearImporte, TIPOS_COMIDA } from '../lib/formato';
 import type { Comida, TipoComida } from '../lib/types';
 import { Hoja, IconoComida, Pantalla, Switch, Vacio } from '../components/ui';
 
@@ -29,6 +29,7 @@ export default function Comidas() {
           <IconoComida tipo={r.comida.tipo} tam={32} />
           <div className="cuerpo">
             <div className="titulo">{nombreComida(r.comida)}</div>
+            {r.comida.menu && <div className="sub menu-comida">{r.comida.menu}</div>}
             <div className="sub">
               {r.comida.asistentes.length} comensales
               {r.ninos > 0 && ` · ${r.ninos} ${r.ninos === 1 ? 'chico' : 'chicos'}`}
@@ -77,6 +78,10 @@ export function FormComida({
   const [fecha, setFecha] = useState(comida?.fecha ?? encuentro.fechaInicio);
   const [tipo, setTipo] = useState<TipoComida>(comida?.tipo ?? 'almuerzo');
   const [todos, setTodos] = useState(true);
+  const [menu, setMenu] = useState(comida?.menu ?? '');
+  const [conPrecioFijo, setConPrecioFijo] = useState((comida?.precioFijo ?? 0) > 0);
+  const [precio, setPrecio] = useState(comida?.precioFijo ? String(comida.precioFijo) : '');
+  const precioFijo = conPrecioFijo ? parsearImporte(precio) : 0;
   const dias = diasEntre(encuentro.fechaInicio, encuentro.fechaFin);
 
   const repetida = encuentro.comidas.some((c) => c.fecha === fecha && c.tipo === tipo && c.id !== comida?.id);
@@ -89,9 +94,18 @@ export function FormComida({
         if (c) {
           c.fecha = fecha;
           c.tipo = tipo;
+          c.menu = menu.trim();
+          c.precioFijo = precioFijo || null;
         }
       } else {
-        e.comidas.push({ id, fecha, tipo, asistentes: todos ? e.personas.map((p) => p.id) : [] });
+        e.comidas.push({
+          id,
+          fecha,
+          tipo,
+          menu: menu.trim(),
+          precioFijo: precioFijo || null,
+          asistentes: todos ? e.personas.map((p) => p.id) : [],
+        });
       }
     });
     onCerrar();
@@ -122,6 +136,41 @@ export function FormComida({
         </div>
         {repetida && <div className="error">Ya existe esa comida ese día.</div>}
       </div>
+      <div className="campo">
+        <label htmlFor="fc-menu">Menú (opcional)</label>
+        <div className="control">
+          <ChefHat size={20} />
+          <input id="fc-menu" placeholder="Ej.: Asado" value={menu} onChange={(e) => setMenu(e.target.value)} />
+        </div>
+      </div>
+      <div className="campo">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1 }}>
+            <span className="etiqueta" style={{ margin: 0 }}>
+              Precio fijo por persona
+            </span>
+            <div className="ayuda">
+              {conPrecioFijo
+                ? 'Se cobra este valor. La diferencia con el costo real va al fondo común.'
+                : `Si no, se cobra el costo real redondeado a ${dinero(encuentro.redondeo)}.`}
+            </div>
+          </div>
+          <Switch checked={conPrecioFijo} onChange={setConPrecioFijo} />
+        </div>
+        {conPrecioFijo && (
+          <div className="control" style={{ marginTop: 10 }}>
+            <Banknote size={20} />
+            <span>$</span>
+            <input
+              id="fc-precio"
+              inputMode="numeric"
+              placeholder="Ej.: 19.000"
+              value={precioFijo ? new Intl.NumberFormat('es-AR').format(precioFijo) : ''}
+              onChange={(e) => setPrecio(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
       {!comida && encuentro.personas.length > 0 && (
         <div className="campo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1 }}>
@@ -133,7 +182,7 @@ export function FormComida({
           <Switch checked={todos} onChange={setTodos} />
         </div>
       )}
-      <button className="btn" disabled={!fecha || repetida} onClick={guardar}>
+      <button className="btn" disabled={!fecha || repetida || (conPrecioFijo && !precioFijo)} onClick={guardar}>
         {comida ? 'Guardar cambios' : 'Agregar comida'}
       </button>
     </Hoja>

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Pencil, PiggyBank, Trash2 } from 'lucide-react';
+import { ArrowRight, Pencil, PiggyBank, ReceiptText, Trash2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenComida, resumenPersonas, ordenarComidas, transferenciasSugeridas } from '../lib/calculos';
-import { dinero, nombreComida } from '../lib/formato';
+import { dinero, fechaCorta, NOMBRE_METODO, nombreComida } from '../lib/formato';
+import { GASTOS_GENERALES } from '../lib/types';
 import { Avatar, Fila, IconoComida, KV, Pantalla, avisar, confirmar } from '../components/ui';
 import { FormPersona } from './Personas';
 
@@ -27,6 +28,7 @@ export default function LiquidacionPersona() {
 
   const comidas = ordenarComidas(encuentro.comidas).filter((c) => c.asistentes.includes(persona.id));
   const compras = encuentro.compras.filter((c) => c.personaId === persona.id);
+  const pagos = encuentro.pagos.filter((p) => p.deId === persona.id || p.aId === persona.id);
 
   const eliminar = async () => {
     const tienePagos = encuentro.pagos.some((p) => p.deId === persona.id || p.aId === persona.id);
@@ -77,7 +79,8 @@ export default function LiquidacionPersona() {
         <>
           <div className="lista">
             <KV k="Costo real de sus comidas" v={dinero(r.costoReal)} />
-            <KV k="Cobrado (redondeado)" v={dinero(r.debioAportar)} />
+            <KV k="Cobrado por sus comidas" v={dinero(r.debioAportar - r.generales)} />
+            {r.generales > 0 && <KV k="Su parte de gastos generales" v={dinero(r.generales)} />}
           </div>
           <div className="lista">
             <KV k="Total que debió aportar" v={dinero(r.debioAportar)} />
@@ -154,16 +157,52 @@ export default function LiquidacionPersona() {
             })}
           </div>
 
+          {r.generales > 0 && (
+            <div className="lista">
+              <Fila onClick={() => navigate('/resumen/generales')} chevron>
+                <ReceiptText size={20} color="var(--texto-2)" />
+                <div className="cuerpo">
+                  <div className="titulo">Gastos generales</div>
+                  <div className="sub">Su parte, repartida entre todos</div>
+                </div>
+                <div className="monto">{dinero(r.generales)}</div>
+              </Fila>
+            </div>
+          )}
+
+          {pagos.length > 0 && (
+            <>
+              <div className="seccion-titulo">Pagos</div>
+              <div className="lista">
+                {pagos.map((p) => (
+                  <div className="fila" key={p.id}>
+                    <div className="cuerpo">
+                      <div className="titulo">
+                        {p.deId === persona.id ? `Le pagó a ${nombre(p.aId)}` : `Recibió de ${nombre(p.deId)}`}
+                      </div>
+                      <div className="sub">
+                        {fechaCorta(p.fecha)}
+                        {p.metodo && ` · ${NOMBRE_METODO[p.metodo]}`}
+                      </div>
+                    </div>
+                    <div className="monto">{dinero(p.importe)}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           <div className="seccion-titulo">Compras que hizo</div>
           <div className="lista">
             {compras.length === 0 && <div className="vacio">No registró compras.</div>}
             {compras.map((c) => {
               const comida = encuentro.comidas.find((x) => x.id === c.comidaId);
+              const destino = comida ? nombreComida(comida) : c.comidaId === GASTOS_GENERALES ? 'Gastos generales' : 'Comida borrada';
               return (
                 <Fila key={c.id} onClick={() => navigate(`/compras/${c.id}`)}>
                   <div className="cuerpo">
                     <div className="titulo">{c.concepto}</div>
-                    <div className="sub">{comida ? nombreComida(comida) : 'Comida borrada'}</div>
+                    <div className="sub">{destino}</div>
                   </div>
                   <div className="monto">{dinero(c.importe)}</div>
                 </Fila>

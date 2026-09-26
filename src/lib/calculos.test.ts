@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   redondearArriba,
   resumenComida,
+  resumenGastosGenerales,
   resumenGeneral,
   resumenPersonas,
   transferenciasSugeridas,
 } from './calculos';
-import type { Encuentro } from './types';
+import { GASTOS_GENERALES, type Encuentro } from './types';
 import { encuentroEjemplo } from './ejemplo';
 
 function base(): Encuentro {
@@ -99,6 +100,42 @@ describe('resumenPersonas', () => {
       saldos.set(x.aId, saldos.get(x.aId)! - x.importe);
     }
     for (const s of saldos.values()) expect(s).toBe(0);
+  });
+});
+
+describe('precio fijo', () => {
+  it('usa el precio fijo en lugar del redondeo, y el fondo puede quedar negativo', () => {
+    const enc = base();
+    enc.comidas[0].precioFijo = 6000;
+    const r = resumenComida(enc, enc.comidas[0]);
+    expect(r.esPrecioFijo).toBe(true);
+    expect(r.cobroPorPersona).toBe(6000);
+    expect(r.fondo).toBe(-2000);
+    expect(resumenPersonas(enc).reduce((s, p) => s + p.saldo, 0)).toBe(0);
+  });
+});
+
+describe('gastos generales', () => {
+  it('se reparten entre los adultos sin generar fondo y los saldos cierran', () => {
+    const enc = base();
+    enc.compras.push({
+      id: 'g',
+      comidaId: GASTOS_GENERALES,
+      personaId: 'caro',
+      concepto: 'Nafta',
+      importe: 10000,
+      observaciones: '',
+      creada: '',
+    });
+    const g = resumenGastosGenerales(enc);
+    expect(g.adultos).toBe(3);
+    expect([...g.reparto.values()].sort()).toEqual([3333, 3333, 3334]);
+    const general = resumenGeneral(enc);
+    expect(general.gastoReal).toBe(30000);
+    expect(general.fondo).toBe(1000); // solo el de la comida
+    const personas = resumenPersonas(enc);
+    expect(personas.reduce((s, p) => s + p.saldo, 0)).toBe(0);
+    expect(personas.find((p) => p.persona.id === 'nene')!.generales).toBe(0);
   });
 });
 

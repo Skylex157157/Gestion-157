@@ -1,6 +1,18 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Check, Download, Pencil, Plus, Share2, Upload } from 'lucide-react';
+import {
+  CalendarDays,
+  Check,
+  Download,
+  FileText,
+  Lock,
+  LockOpen,
+  Pencil,
+  Plus,
+  Search,
+  Share2,
+  Upload,
+} from 'lucide-react';
 import { useStore } from '../lib/store';
 import {
   ES_ARTIFACT,
@@ -23,7 +35,11 @@ export async function compartirResumen(encuentro: Encuentro) {
 }
 
 export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNuevo: () => void }) {
-  const { estado, encuentro, activar, reemplazarTodo } = useStore();
+  const { estado, encuentro, activar, reemplazarTodo, actualizar } = useStore();
+  const [busqueda, setBusqueda] = useState('');
+  const encuentros = estado.encuentros.filter((e) =>
+    e.nombre.toLowerCase().includes(busqueda.trim().toLowerCase()),
+  );
   const navigate = useNavigate();
   const archivo = useRef<HTMLInputElement>(null);
 
@@ -74,7 +90,17 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
           </div>
 
           <div className="menu-etq">Mis encuentros</div>
-          {estado.encuentros.map((e) => (
+          {estado.encuentros.length > 4 && (
+            <label className="buscador" style={{ margin: '4px 16px 6px' }}>
+              <Search size={16} />
+              <input
+                placeholder="Buscar encuentro..."
+                value={busqueda}
+                onChange={(ev) => setBusqueda(ev.target.value)}
+              />
+            </label>
+          )}
+          {encuentros.map((e) => (
             <button
               key={e.id}
               className={`menu-item ${e.id === encuentro?.id ? 'activo' : ''}`}
@@ -88,7 +114,9 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
                 {e.nombre}
                 <br />
                 <small style={{ color: 'var(--texto-3)', fontWeight: 400 }}>
-                  {fechaCorta(e.fechaInicio)} - {fechaCorta(e.fechaFin)}
+                  {fechaCorta(e.fechaInicio)} - {fechaCorta(e.fechaFin)} · {e.personas.length} personas ·{' '}
+                  {e.comidas.length} comidas
+                  {e.cerrado && ' · Cerrado'}
                 </small>
               </span>
               {e.id === encuentro?.id && <Check size={18} />}
@@ -112,6 +140,21 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
               </button>
               <button className="menu-item" onClick={compartir}>
                 <Share2 size={20} /> Compartir resumen (WhatsApp)
+              </button>
+              <button className="menu-item" onClick={() => ir('/informe')}>
+                <FileText size={20} /> Informe / PDF
+              </button>
+              <button
+                className="menu-item"
+                onClick={() => {
+                  const cerrar = !encuentro.cerrado;
+                  actualizar((e) => (e.cerrado = cerrar));
+                  avisar(cerrar ? 'Encuentro cerrado. Podés seguir modificándolo.' : 'Encuentro reabierto');
+                  onCerrar();
+                }}
+              >
+                {encuentro.cerrado ? <LockOpen size={20} /> : <Lock size={20} />}
+                {encuentro.cerrado ? 'Reabrir encuentro' : 'Cerrar encuentro'}
               </button>
             </>
           )}

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, ShoppingCart } from 'lucide-react';
+import { Plus, ReceiptText, Search, ShoppingCart } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
+import { GASTOS_GENERALES } from '../lib/types';
 import { ordenarComidas } from '../lib/calculos';
 import { dinero, hora, nombreComida } from '../lib/formato';
 import { Avatar, Fila, IconoComida, Pantalla, Vacio } from '../components/ui';
@@ -19,14 +20,23 @@ export default function Compras() {
     c.observaciones.toLowerCase().includes(texto) ||
     (persona(c.personaId)?.nombre.toLowerCase().includes(texto) ?? false);
 
-  const grupos = ordenarComidas(encuentro.comidas)
-    .map((comida) => ({
-      comida,
-      compras: encuentro.compras
-        .filter((c) => c.comidaId === comida.id && coincide(c))
-        .sort((a, b) => a.creada.localeCompare(b.creada)),
-    }))
-    .filter((g) => g.compras.length > 0);
+  const deLa = (comidaId: string) =>
+    encuentro.compras.filter((c) => c.comidaId === comidaId && coincide(c)).sort((a, b) => a.creada.localeCompare(b.creada));
+
+  const grupos = [
+    ...ordenarComidas(encuentro.comidas).map((comida) => ({
+      clave: comida.id,
+      titulo: nombreComida(comida),
+      icono: <IconoComida tipo={comida.tipo} tam={18} />,
+      compras: deLa(comida.id),
+    })),
+    {
+      clave: GASTOS_GENERALES,
+      titulo: 'Gastos generales',
+      icono: <ReceiptText size={18} color="var(--texto-2)" />,
+      compras: deLa(GASTOS_GENERALES),
+    },
+  ].filter((g) => g.compras.length > 0);
 
   const total = grupos.reduce((s, g) => s + g.compras.reduce((t, c) => t + c.importe, 0), 0);
 
@@ -54,11 +64,16 @@ export default function Compras() {
         </Vacio>
       )}
 
-      {grupos.map(({ comida, compras }) => (
-        <div key={comida.id}>
+      {grupos.map(({ clave, titulo, icono, compras }) => (
+        <div key={clave}>
           <div className="seccion-titulo" style={{ justifyContent: 'flex-start', gap: 8 }}>
-            <IconoComida tipo={comida.tipo} tam={18} />
-            {nombreComida(comida)}
+            {icono}
+            {titulo}
+            {clave === GASTOS_GENERALES && (
+              <button style={{ marginLeft: 'auto' }} onClick={() => navigate('/resumen/generales')}>
+                Ver reparto
+              </button>
+            )}
           </div>
           <div className="lista">
             {compras.map((c) => (

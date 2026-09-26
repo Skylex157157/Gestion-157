@@ -1,4 +1,4 @@
-import type { Comida, TipoComida } from './types';
+import type { Comida, MetodoPago, TipoComida } from './types';
 
 const numero = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
@@ -71,6 +71,9 @@ export const CONCEPTOS = [
   'Hielo',
   'Carbón / leña',
   'Descartables',
+  'Nafta / viaje',
+  'Alquiler',
+  'Limpieza',
   'Otros',
 ];
 
@@ -101,3 +104,8 @@ export function parsearImporte(texto: string): number {
   const limpio = texto.replace(/[^\d]/g, '');
   return limpio ? Number(limpio) : 0;
 }
+
+export const NOMBRE_METODO: Record<MetodoPago, string> = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia',
+};

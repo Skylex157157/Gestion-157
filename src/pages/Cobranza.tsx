@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Check, CircleCheck, Undo2 } from 'lucide-react';
+import { ArrowRight, Banknote, Check, CircleCheck, Hourglass, Landmark, Undo2, UserCheck } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenPersonas, transferenciasSugeridas, type Transferencia } from '../lib/calculos';
-import { dinero, fechaCorta, hoyISO, nuevoId } from '../lib/formato';
-import { Avatar, Fila, Pantalla, avisar, confirmar } from '../components/ui';
+import { dinero, fechaCorta, hoyISO, NOMBRE_METODO, nuevoId } from '../lib/formato';
+import type { MetodoPago } from '../lib/types';
+import { Avatar, Fila, Hoja, Pantalla, avisar, confirmar } from '../components/ui';
 
 export default function Cobranza() {
   const { encuentro, actualizar } = useEncuentro();
@@ -15,12 +16,20 @@ export default function Cobranza() {
   const transferencias = transferenciasSugeridas(personas.map((p) => ({ id: p.persona.id, saldo: p.saldo })));
   const nombre = (id: string) => encuentro.personas.find((p) => p.id === id)?.nombre ?? '?';
 
-  const marcarPagado = (t: Transferencia) => {
+  const [pagando, setPagando] = useState<Transferencia | null>(null);
+
+  const registrarPago = (t: Transferencia, metodo: MetodoPago) => {
     actualizar((e) => {
-      e.pagos.push({ id: nuevoId(), deId: t.deId, aId: t.aId, importe: t.importe, fecha: hoyISO() });
+      e.pagos.push({ id: nuevoId(), deId: t.deId, aId: t.aId, importe: t.importe, fecha: hoyISO(), metodo });
     });
-    avisar(`Pago de ${nombre(t.deId)} registrado`);
+    setPagando(null);
+    avisar(`Pago de ${nombre(t.deId)} registrado (${NOMBRE_METODO[metodo].toLowerCase()})`);
   };
+
+  const pendiente = transferencias.reduce((s, t) => s + t.importe, 0);
+  const porMetodo = (m: MetodoPago) =>
+    encuentro.pagos.filter((p) => p.metodo === m).reduce((s, p) => s + p.importe, 0);
+  const alDia = personas.filter((p) => Math.round(p.saldo) === 0).length;
 
   const deshacer = async (id: string) => {
     if (!(await confirmar('El pago se va a quitar y la deuda vuelve a aparecer.', { aceptar: 'Deshacer pago' }))) return;
@@ -38,6 +47,39 @@ export default function Cobranza() {
         <button className={tab === 'transferencias' ? 'activo' : ''} onClick={() => setTab('transferencias')}>
           Quién paga a quién
         </button>
+      </div>
+
+      <div className="tiles compactas" style={{ marginBottom: 12 }}>
+        <div className="tile amarillo">
+          <Hourglass className="ico" size={22} />
+          <div>
+            <div className="etq">Pendiente</div>
+            <div className="valor">{dinero(pendiente)}</div>
+          </div>
+        </div>
+        <div className="tile verde">
+          <UserCheck className="ico" size={22} />
+          <div>
+            <div className="etq">Personas al día</div>
+            <div className="valor">
+              {alDia} / {personas.length}
+            </div>
+          </div>
+        </div>
+        <div className="tile verde">
+          <Banknote className="ico" size={22} />
+          <div>
+            <div className="etq">Pagado en efectivo</div>
+            <div className="valor">{dinero(porMetodo('efectivo'))}</div>
+          </div>
+        </div>
+        <div className="tile azul">
+          <Landmark className="ico" size={22} />
+          <div>
+            <div className="etq">Por transferencia</div>
+            <div className="valor">{dinero(porMetodo('transferencia'))}</div>
+          </div>
+        </div>
       </div>
 
       {tab === 'saldos' ? (
@@ -79,7 +121,7 @@ export default function Cobranza() {
                   className="pagado-btn"
                   aria-label={`Marcar como pagado: ${nombre(t.deId)} a ${nombre(t.aId)}`}
                   title="Marcar como pagado"
-                  onClick={() => marcarPagado(t)}
+                  onClick={() => setPagando(t)}
                 >
                   <Check size={18} strokeWidth={2.6} />
                 </button>
@@ -106,7 +148,15 @@ export default function Cobranza() {
                       <div className="titulo">
                         {nombre(p.deId)} → {nombre(p.aId)}
                       </div>
-                      <div className="sub">{fechaCorta(p.fecha)}</div>
+                      <div className="sub">
+                        {fechaCorta(p.fecha)}
+                        {p.metodo && (
+                          <>
+                            {' '}
+                            <span className={`chip ${p.metodo === 'efectivo' ? '' : 'azul'}`}>{NOMBRE_METODO[p.metodo]}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <div className="monto positivo">{dinero(p.importe)}</div>
                     <button className="icon-btn" aria-label="Deshacer pago" onClick={() => deshacer(p.id)} style={{ color: 'var(--texto-3)' }}>
@@ -118,6 +168,27 @@ export default function Cobranza() {
             </>
           )}
         </>
+      )}
+      {pagando && (
+        <Hoja titulo="Registrar pago" onCerrar={() => setPagando(null)}>
+          <div className="transfer" style={{ padding: '4px 0 18px', borderBottom: 0 }}>
+            <strong>{nombre(pagando.deId)}</strong>
+            <ArrowRight size={16} color="var(--texto-3)" />
+            <strong>{nombre(pagando.aId)}</strong>
+            <span className="monto">{dinero(pagando.importe)}</span>
+          </div>
+          <span className="etiqueta" style={{ display: 'block', marginBottom: 10, fontSize: 13.5, fontWeight: 500 }}>
+            ¿Cómo se pagó?
+          </span>
+          <div className="fila-flex">
+            <button className="btn" onClick={() => registrarPago(pagando, 'efectivo')}>
+              <Banknote size={20} /> Efectivo
+            </button>
+            <button className="btn" style={{ marginTop: 0 }} onClick={() => registrarPago(pagando, 'transferencia')}>
+              <Landmark size={20} /> Transferencia
+            </button>
+          </div>
+        </Hoja>
       )}
     </Pantalla>
   );

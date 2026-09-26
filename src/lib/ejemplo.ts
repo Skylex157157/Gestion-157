@@ -1,4 +1,4 @@
-import type { Comida, Compra, Encuentro, Persona, TipoComida } from './types';
+import { GASTOS_GENERALES, type Comida, type Compra, type Encuentro, type Persona, type TipoComida } from './types';
 import { COLORES_PERSONA, nuevoId } from './formato';
 
 const NOMBRES: [string, boolean][] = [
@@ -77,6 +77,25 @@ export function encuentroEjemplo(): Encuentro {
       });
     }
   });
+
+  const menus = ['Asado', 'Pastas', 'Café con medialunas', 'Asado', 'Pizzas', 'Asado'];
+  comidas.forEach((c, i) => (c.menu = menus[i]));
+
+  // Gastos que no son de una comida: se reparten entre todos los adultos
+  for (const [p, concepto, importe, fecha] of [
+    [0, 'Alquiler', 120000, '2025-04-18T10:00:00'],
+    [2, 'Nafta / viaje', 30000, '2025-04-18T09:00:00'],
+  ] as const) {
+    compras.push({
+      id: nuevoId(),
+      comidaId: GASTOS_GENERALES,
+      personaId: personas[p].id,
+      concepto,
+      importe,
+      observaciones: concepto === 'Alquiler' ? 'Quinta, 2 noches' : '',
+      creada: fecha,
+    });
+  }
 
   return {
     id: nuevoId(),

@@ -4,7 +4,7 @@ import { CalendarDays, ImagePlus, PartyPopper, Trash2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { dinero, fechaCorta, nombreComida } from '../lib/formato';
 import { tesoreroEfectivo } from '../lib/calculos';
-import { Pantalla, avisar, confirmar } from '../components/ui';
+import { Pantalla, Switch, avisar, confirmar } from '../components/ui';
 
 const REDONDEOS = [1, 100, 500, 1000, 2000, 5000];
 
@@ -40,6 +40,7 @@ export default function EditarEncuentro() {
   const [fin, setFin] = useState(encuentro.fechaFin);
   const [redondeo, setRedondeo] = useState(encuentro.redondeo);
   const [tesorero, setTesorero] = useState(tesoreroEfectivo(encuentro) ?? '');
+  const [cerrado, setCerrado] = useState(!!encuentro.cerrado);
 
   const fueraDeRango = encuentro.comidas.filter((c) => c.fecha < inicio || c.fecha > fin);
 
@@ -51,6 +52,7 @@ export default function EditarEncuentro() {
       e.fechaFin = fin < inicio ? inicio : fin;
       e.redondeo = redondeo;
       e.tesoreroId = tesorero || null;
+      e.cerrado = cerrado;
     });
     avisar('Encuentro guardado');
     navigate(-1);
@@ -175,6 +177,18 @@ export default function EditarEncuentro() {
             </select>
           </div>
         </div>
+      </div>
+
+      <div className="card card-pad" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <span className="etiqueta" style={{ fontWeight: 500, fontSize: 13.5 }}>
+            Encuentro cerrado
+          </span>
+          <div className="ayuda">
+            Marcalo cuando terminó y solo falta cobrar. Podés seguir modificando todo igual.
+          </div>
+        </div>
+        <Switch checked={cerrado} onChange={setCerrado} />
       </div>
 
       <button className="btn" disabled={!nombre.trim()} onClick={guardar}>

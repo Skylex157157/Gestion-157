@@ -18,6 +18,8 @@ import ResumenComida from './pages/ResumenComida';
 import FondoComun from './pages/FondoComun';
 import Cobranza from './pages/Cobranza';
 import EditarEncuentro from './pages/EditarEncuentro';
+import GastosGenerales from './pages/GastosGenerales';
+import Informe from './pages/Informe';
 
 export default function App() {
   const { encuentro, errorGuardado } = useStore();
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="/resumen/comidas" element={<ResumenComida />} />
           <Route path="/resumen/fondo" element={<FondoComun />} />
           <Route path="/resumen/cobranza" element={<Cobranza />} />
+          <Route path="/resumen/generales" element={<GastosGenerales />} />
+          <Route path="/informe" element={<Informe />} />
           <Route path="/encuentro" element={<EditarEncuentro />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

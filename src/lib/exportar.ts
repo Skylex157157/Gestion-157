@@ -18,6 +18,7 @@ export function textoResumen(enc: Encuentro): string {
   if (enc.fechaInicio) lineas.push(`${fechaCorta(enc.fechaInicio)} al ${fechaCorta(enc.fechaFin)}`);
   lineas.push('');
   lineas.push(`Gasto real: ${dinero(general.gastoReal)}`);
+  if (general.gastosGenerales > 0) lineas.push(`  (incluye ${dinero(general.gastosGenerales)} de gastos generales)`);
   lineas.push(`Total cobrado: ${dinero(general.recaudado)}`);
   lineas.push(`Fondo común: ${dinero(general.fondo)}${tesorero ? ` (lo guarda ${nombre(tesorero)})` : ''}`);
   lineas.push('');

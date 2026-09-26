@@ -13,12 +13,22 @@ export interface Comida {
   /** Fecha en formato YYYY-MM-DD */
   fecha: string;
   tipo: TipoComida;
+  /** Qué se come (ej.: "Asado"). Opcional. */
+  menu?: string;
+  /** Precio fijo por persona. Si no hay, se usa el costo real redondeado. */
+  precioFijo?: number | null;
   /** Ids de las personas que comieron */
   asistentes: string[];
 }
 
+/** comidaId de las compras que no son de una comida: se reparten entre todos los adultos. */
+export const GASTOS_GENERALES = 'generales';
+
+export type MetodoPago = 'efectivo' | 'transferencia';
+
 export interface Compra {
   id: string;
+  /** Id de la comida, o GASTOS_GENERALES */
   comidaId: string;
   personaId: string;
   concepto: string;
@@ -35,6 +45,7 @@ export interface Pago {
   aId: string;
   importe: number;
   fecha: string;
+  metodo?: MetodoPago;
 }
 
 export interface Encuentro {
@@ -46,6 +57,8 @@ export interface Encuentro {
   redondeo: number;
   /** Persona que guarda el fondo común */
   tesoreroId: string | null;
+  /** Encuentro cerrado para liquidar. No bloquea los cambios. */
+  cerrado?: boolean;
   /** Foto de portada como data URL (opcional) */
   foto: string | null;
   personas: Persona[];

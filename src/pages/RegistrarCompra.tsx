@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Banknote, CalendarDays, FileText, Tag, Trash2, User } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
+import { GASTOS_GENERALES } from '../lib/types';
 import { ordenarComidas } from '../lib/calculos';
 import { CONCEPTOS, dinero, hoyISO, nombreComida, nuevoId, parsearImporte } from '../lib/formato';
 import { Pantalla, Vacio, avisar, confirmar } from '../components/ui';
@@ -20,7 +21,7 @@ export default function RegistrarCompra() {
     existente?.comidaId ??
     params.get('comida') ??
     (comidas.find((c) => c.fecha >= hoyISO()) ?? comidas[comidas.length - 1])?.id ??
-    '';
+    GASTOS_GENERALES;
 
   const [personaId, setPersonaId] = useState(existente?.personaId ?? '');
   const [comidaId, setComidaId] = useState(comidaInicial);
@@ -39,25 +40,13 @@ export default function RegistrarCompra() {
     );
   }
 
-  if (encuentro.personas.length === 0 || comidas.length === 0) {
+  if (encuentro.personas.length === 0) {
     return (
       <Pantalla titulo="Registrar compra" atras sinNav>
-        <Vacio icono={<Tag size={36} />}>
-          Para registrar una compra primero tenés que cargar
-          {encuentro.personas.length === 0 ? ' las personas' : ''}
-          {encuentro.personas.length === 0 && comidas.length === 0 ? ' y' : ''}
-          {comidas.length === 0 ? ' las comidas' : ''}.
-        </Vacio>
-        {encuentro.personas.length === 0 && (
-          <button className="btn" onClick={() => navigate('/personas')}>
-            Ir a Personas
-          </button>
-        )}
-        {comidas.length === 0 && (
-          <button className="btn borde" onClick={() => navigate('/comidas')}>
-            Ir a Comidas
-          </button>
-        )}
+        <Vacio icono={<Tag size={36} />}>Para registrar una compra primero tenés que cargar a las personas.</Vacio>
+        <button className="btn" onClick={() => navigate('/personas')}>
+          Ir a Personas
+        </button>
       </Pantalla>
     );
   }
@@ -126,7 +115,7 @@ export default function RegistrarCompra() {
         </div>
 
         <div className="campo">
-          <label htmlFor="rc-comida">Comida</label>
+          <label htmlFor="rc-comida">Asignar a</label>
           <div className="control">
             <CalendarDays size={20} />
             <select id="rc-comida" value={comidaId} onChange={(e) => setComidaId(e.target.value)}>
@@ -136,8 +125,14 @@ export default function RegistrarCompra() {
                   {nombreComida(c)}
                 </option>
               ))}
+              <option value={GASTOS_GENERALES}>Gastos generales (entre todos)</option>
             </select>
           </div>
+          {comidaId === GASTOS_GENERALES && (
+            <div className="ayuda">
+              Nafta, alquiler, limpieza… Se reparte en partes iguales entre todos los adultos y no suma al fondo común.
+            </div>
+          )}
           {intentado && errores.comida && <div className="error">{errores.comida}</div>}
         </div>
 

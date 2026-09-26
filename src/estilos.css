@@ -1176,3 +1176,128 @@ table.tabla {
     opacity: 0.6;
   }
 }
+
+.menu-comida {
+  font-style: italic;
+  color: var(--texto-2);
+}
+
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--azul);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* ---------- Informe / PDF ---------- */
+
+.informe {
+  background: var(--tarjeta);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  padding: 18px 16px;
+}
+
+.informe-cab {
+  border-bottom: 2px solid var(--verde-700);
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+}
+
+.informe-cab h1 {
+  margin: 0;
+  font-size: 21px;
+  color: var(--verde-800);
+}
+
+.informe-cab p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--texto-2);
+}
+
+.informe-seccion {
+  margin-top: 18px;
+}
+
+.informe-seccion h2 {
+  font-size: 15px;
+  margin: 0 0 8px;
+  color: var(--verde-800);
+}
+
+.informe-seccion h3 {
+  font-size: 13.5px;
+  margin: 14px 0 4px;
+}
+
+.informe-comida {
+  break-inside: avoid;
+}
+
+.informe-datos {
+  font-size: 12px;
+  color: var(--texto-2);
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.informe-nota {
+  font-size: 12px;
+  color: var(--texto-3);
+  font-weight: 400;
+}
+
+.informe-tabla {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.informe-tabla td:first-child {
+  white-space: normal;
+}
+
+.informe-tabla td.informe-lista {
+  text-align: left;
+  white-space: normal;
+  color: var(--texto-2);
+}
+
+@media print {
+  html,
+  body,
+  .app {
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .appbar,
+  .bottom-nav,
+  .fab,
+  .toast,
+  .no-imprimir {
+    display: none !important;
+  }
+  .contenido {
+    padding: 0 !important;
+  }
+  .app {
+    max-width: none;
+  }
+  .informe {
+    box-shadow: none;
+    padding: 0;
+  }
+  .informe-seccion {
+    break-inside: auto;
+  }
+  .informe-seccion h2 {
+    break-after: avoid;
+  }
+  @page {
+    size: A4;
+    margin: 16mm;
+  }
+}

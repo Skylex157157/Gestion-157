@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeftRight, Banknote, ClipboardList, PiggyBank, Share2, UserRound, Users, Utensils } from 'lucide-react';
+import { ArrowLeftRight, Banknote, ClipboardList, FileText, ReceiptText, PiggyBank, Share2, UserRound, Users, Utensils } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenGeneral } from '../lib/calculos';
 import { compartirResumen } from '../components/Menu';
@@ -69,7 +69,7 @@ export default function ResumenGeneral() {
             </tr>
           </thead>
           <tbody>
-            {g.comidas.length === 0 && (
+            {g.comidas.length === 0 && g.gastosGenerales === 0 && (
               <tr>
                 <td colSpan={4} style={{ textAlign: 'center', color: 'var(--texto-3)' }}>
                   Sin comidas
@@ -89,8 +89,21 @@ export default function ResumenGeneral() {
                 <td className="positivo">{corto(r.fondo)}</td>
               </tr>
             ))}
+            {g.gastosGenerales > 0 && (
+              <tr onClick={() => navigate('/resumen/generales')} style={{ cursor: 'pointer' }}>
+                <td>
+                  <span className="nombre-comida">
+                    <ReceiptText size={14} color="var(--texto-2)" />
+                    Gastos generales
+                  </span>
+                </td>
+                <td>{corto(g.gastosGenerales)}</td>
+                <td>{corto(g.gastosGenerales)}</td>
+                <td className="positivo">{corto(0)}</td>
+              </tr>
+            )}
           </tbody>
-          {g.comidas.length > 0 && (
+          {(g.comidas.length > 0 || g.gastosGenerales > 0) && (
             <tfoot>
               <tr>
                 <td>Total</td>
@@ -116,6 +129,12 @@ export default function ResumenGeneral() {
         </button>
         <button className="acceso" style={{ border: 0 }} onClick={() => navigate('/resumen/cobranza')}>
           <ArrowLeftRight size={22} /> Cobranza
+        </button>
+        <button className="acceso" style={{ border: 0 }} onClick={() => navigate('/resumen/generales')}>
+          <ReceiptText size={22} /> Gastos generales
+        </button>
+        <button className="acceso" style={{ border: 0 }} onClick={() => navigate('/informe')}>
+          <FileText size={22} /> Informe / PDF
         </button>
       </div>
       <button className="btn" onClick={() => navigate('/resumen/cobranza')}>
