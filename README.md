@@ -35,5 +35,10 @@ npm test         # tests de los cálculos
 npm run build    # genera dist/
 ```
 
-Hecha con React + TypeScript + Vite. El workflow `.github/workflows/deploy.yml` publica la app en
-GitHub Pages en cada push a `main` (hay que activar *Settings → Pages → Source: GitHub Actions*).
+Hecha con React + TypeScript + Vite.
+
+## Publicación
+
+La app se publica en **https://skylex157157.github.io/Gestion-157/** con GitHub Pages. El workflow
+`.github/workflows/deploy.yml` la vuelve a publicar en cada push a la rama principal del repositorio.
+Requiere *Settings → Pages → Source: GitHub Actions*.

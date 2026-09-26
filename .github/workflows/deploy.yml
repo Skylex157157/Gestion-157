@@ -1,8 +1,8 @@
 name: Publicar en GitHub Pages
 
+# Publica cada push a la rama principal del repositorio (sea cual sea su nombre)
 on:
   push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
