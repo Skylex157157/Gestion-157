@@ -138,7 +138,7 @@ export default function ResumenGeneral() {
         </button>
       </div>
       <button className="btn" onClick={() => navigate('/resumen/cobranza')}>
-        <ArrowLeftRight size={20} /> ¿Quién paga a quién?
+        <ArrowLeftRight size={20} /> ¿Quién ya pagó?
       </button>
     </Pantalla>
   );

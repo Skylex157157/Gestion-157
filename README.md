@@ -1,21 +1,23 @@
 # Juntada — Control de gastos y reparto
 
-App web (para usar desde el celular) para llevar las cuentas de un encuentro grupal:
-quién compró qué en cada comida, cuánto le toca poner a cada uno y quién le tiene que pagar a quién.
+App web (para usar desde el celular) para llevar las cuentas de un encuentro grupal donde una persona
+compra todo: cuánto se gastó en cada comida, cuánto le toca poner a cada uno y quién ya le pagó.
 
 ## Cómo funciona
 
-- **Encuentros**: podés tener varios ("Fin de semana en familia", "Navidad"…). Se cambia desde el menú ☰.
-- **Personas**: se marcan como *chico* los que comen pero no pagan; su parte se reparte entre los adultos.
-- **Comidas**: cada desayuno / almuerzo / merienda / cena, con la lista de quiénes comieron
+- **Encuentros**: podés tener varios ("Fin de semana en familia", "Navidad"…). Se cambian desde el menú ☰.
+- **Quién compra todo**: en cada encuentro se elige una persona que hace todas las compras. Los demás le pagan
+  a ella, y se queda con el fondo común.
+- **Comidas**: cada desayuno / almuerzo / merienda / cena, con menú y la lista de quiénes comieron
   (botón "Marcar a todos").
-- **Compras**: quién compró, para qué comida, concepto e importe.
-- **Cobro por persona** = gasto real ÷ adultos que comieron, **redondeado hacia arriba**
-  al múltiplo elegido en el encuentro ($100, $500, $1.000…).
-- **Fondo común**: lo que sobra por el redondeo. Queda para el grupo y lo guarda la persona elegida
-  ("¿Quién guarda el fondo común?").
-- **Cobranza**: saldos de cada uno y transferencias sugeridas (la menor cantidad de movimientos).
-  Tocá ✓ cuando alguien paga y se descuenta.
+- **Compras**: para qué comida, concepto e importe. Los **gastos generales** (nafta, alquiler…) no son de una
+  comida y se reparten en partes iguales entre todos.
+- **Cobro por persona** = gasto real ÷ comensales, **redondeado hacia arriba** al múltiplo elegido en el
+  encuentro ($100, $500, $1.000…), o un **precio fijo** por comida.
+- **Fondo común**: lo que sobra por el redondeo. Queda para el grupo y lo guarda quien compra todo.
+- **Cobranza**: lo que debe cada uno. Al marcar a alguien como pagado se elige efectivo o transferencia.
+  Si después cambia lo que debe, la diferencia vuelve a aparecer como pendiente.
+- **Informe / PDF**: resumen completo para imprimir o guardar como PDF.
 
 Los datos se guardan **solo en el teléfono** (almacenamiento del navegador). Desde el menú podés:
 

@@ -8,13 +8,32 @@ function estadoVacio(): Estado {
   return { version: 1, encuentroActivoId: null, encuentros: [] };
 }
 
+/**
+ * Adapta datos guardados por versiones anteriores de la app: el antiguo
+ * "tesorero" pasa a ser el comprador, y se descartan los pagos entre personas.
+ */
+export function migrarEstado(estado: Estado): Estado {
+  return {
+    ...estado,
+    encuentros: estado.encuentros.map((e) => {
+      const viejo = e as Encuentro & { tesoreroId?: string | null };
+      const { tesoreroId, ...resto } = viejo;
+      return {
+        ...resto,
+        compradorId: viejo.compradorId ?? tesoreroId ?? null,
+        pagos: (e.pagos ?? []).filter((p) => typeof p.personaId === 'string' && !!p.metodo),
+      };
+    }),
+  };
+}
+
 function cargar(): Estado {
   try {
     const crudo = localStorage.getItem(CLAVE);
     if (!crudo) return estadoVacio();
     const estado = JSON.parse(crudo) as Estado;
     if (estado?.version !== 1 || !Array.isArray(estado.encuentros)) return estadoVacio();
-    return estado;
+    return migrarEstado(estado);
   } catch {
     return estadoVacio();
   }
@@ -27,7 +46,7 @@ export function encuentroNuevo(nombre: string, fechaInicio: string, fechaFin: st
     fechaInicio,
     fechaFin,
     redondeo: 1000,
-    tesoreroId: null,
+    compradorId: null,
     foto: null,
     personas: [],
     comidas: [],

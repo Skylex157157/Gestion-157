@@ -3,8 +3,8 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, Pencil, Plus, ShoppingCart, Trash2, Users } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenComida } from '../lib/calculos';
-import { dinero, fechaLarga, hora, NOMBRE_TIPO } from '../lib/formato';
-import { Avatar, Fila, IconoComida, KV, Pantalla, Vacio, confirmar } from '../components/ui';
+import { dinero, fechaLarga, NOMBRE_TIPO } from '../lib/formato';
+import { FilaCompra, IconoComida, KV, Pantalla, Vacio, confirmar } from '../components/ui';
 import { FormComida } from './Comidas';
 
 export default function DetalleComida() {
@@ -19,7 +19,6 @@ export default function DetalleComida() {
   const compras = encuentro.compras
     .filter((c) => c.comidaId === comida.id)
     .sort((a, b) => a.creada.localeCompare(b.creada));
-  const persona = (pid: string) => encuentro.personas.find((p) => p.id === pid);
 
   const eliminar = async () => {
     const aviso = compras.length
@@ -52,20 +51,19 @@ export default function DetalleComida() {
           {comida.menu && <div className="sub menu-comida">{comida.menu}</div>}
           <div className="sub">
             {comida.asistentes.length} comensales
-            {r.ninos > 0 && ` (${r.ninos} ${r.ninos === 1 ? 'chico no paga' : 'chicos no pagan'})`}
           </div>
         </div>
         {r.gastoReal > 0 && <span className="chip">{r.fondo > 0 ? 'Suma al fondo' : 'Cerrada'}</span>}
       </div>
 
-      {r.sinPagantes && (
+      {r.sinComensales && (
         <div className="aviso rojo">
           <AlertTriangle size={20} />
-          Esta comida tiene gastos pero ningún adulto anotado. Marcá quiénes comieron para poder repartir el gasto.
+          Esta comida tiene gastos pero nadie anotado. Marcá quiénes comieron para poder repartir el gasto.
         </div>
       )}
 
-      {r.fondo < 0 && !r.sinPagantes && (
+      {r.fondo < 0 && !r.sinComensales && (
         <div className="aviso rojo">
           <AlertTriangle size={20} />
           El precio fijo no alcanza para cubrir el gasto: faltan {dinero(-r.fondo)}, que salen del fondo común.
@@ -75,9 +73,9 @@ export default function DetalleComida() {
       <div className="seccion-titulo">Resumen de la comida</div>
       <div className="lista">
         <KV k="Gasto real total" v={dinero(r.gastoReal)} />
-        {r.pagantes > 0 && <KV k="Costo real por persona" v={dinero(r.gastoReal / r.pagantes)} />}
+        {r.comensales > 0 && <KV k="Costo real por persona" v={dinero(r.gastoReal / r.comensales)} />}
         <KV k={r.esPrecioFijo ? 'Cobro por persona (precio fijo)' : 'Cobro por persona'} v={dinero(r.cobroPorPersona)} />
-        <KV k={`Recaudado (${r.pagantes} x ${dinero(r.cobroPorPersona)})`} v={dinero(r.recaudado)} />
+        <KV k={`Recaudado (${r.comensales} x ${dinero(r.cobroPorPersona)})`} v={dinero(r.recaudado)} />
         <KV k="Diferencia (fondo común)" v={dinero(r.fondo)} clase={r.fondo < 0 ? 'alerta' : 'destacado'} />
       </div>
 
@@ -90,17 +88,7 @@ export default function DetalleComida() {
           <Vacio icono={<ShoppingCart size={32} />}>Todavía no hay compras para esta comida.</Vacio>
         )}
         {compras.map((c) => (
-          <Fila key={c.id} onClick={() => navigate(`/compras/${c.id}`)}>
-            <Avatar persona={persona(c.personaId)} tam="chico" />
-            <div className="cuerpo">
-              <div className="titulo">{persona(c.personaId)?.nombre ?? 'Persona borrada'}</div>
-              <div className="sub">{c.concepto}</div>
-            </div>
-            <div className="monto">
-              {dinero(c.importe)}
-              <small>{c.creada && hora(c.creada)}</small>
-            </div>
-          </Fila>
+          <FilaCompra key={c.id} compra={c} onClick={() => navigate(`/compras/${c.id}`)} />
         ))}
       </div>
 

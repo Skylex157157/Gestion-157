@@ -4,21 +4,19 @@ import { Plus, ReceiptText, Search, ShoppingCart } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { GASTOS_GENERALES } from '../lib/types';
 import { ordenarComidas } from '../lib/calculos';
-import { dinero, hora, nombreComida } from '../lib/formato';
-import { Avatar, Fila, IconoComida, Pantalla, Vacio } from '../components/ui';
+import { dinero, nombreComida } from '../lib/formato';
+import { FilaCompra, IconoComida, Pantalla, Vacio } from '../components/ui';
 
 export default function Compras() {
   const { encuentro } = useEncuentro();
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
-  const persona = (id: string) => encuentro.personas.find((p) => p.id === id);
 
   const texto = busqueda.trim().toLowerCase();
   const coincide = (c: (typeof encuentro.compras)[number]) =>
     !texto ||
     c.concepto.toLowerCase().includes(texto) ||
-    c.observaciones.toLowerCase().includes(texto) ||
-    (persona(c.personaId)?.nombre.toLowerCase().includes(texto) ?? false);
+    c.observaciones.toLowerCase().includes(texto);
 
   const deLa = (comidaId: string) =>
     encuentro.compras.filter((c) => c.comidaId === comidaId && coincide(c)).sort((a, b) => a.creada.localeCompare(b.creada));
@@ -45,7 +43,7 @@ export default function Compras() {
       <label className="buscador">
         <Search size={18} />
         <input
-          placeholder="Buscar por persona o concepto..."
+          placeholder="Buscar compra..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -77,20 +75,7 @@ export default function Compras() {
           </div>
           <div className="lista">
             {compras.map((c) => (
-              <Fila key={c.id} onClick={() => navigate(`/compras/${c.id}`)}>
-                <Avatar persona={persona(c.personaId)} tam="chico" />
-                <div className="cuerpo">
-                  <div className="titulo">{persona(c.personaId)?.nombre ?? 'Persona borrada'}</div>
-                  <div className="sub">
-                    {c.concepto}
-                    {c.observaciones && ` · ${c.observaciones}`}
-                  </div>
-                </div>
-                <div className="monto">
-                  {dinero(c.importe)}
-                  <small>{c.creada && hora(c.creada)}</small>
-                </div>
-              </Fila>
+              <FilaCompra key={c.id} compra={c} onClick={() => navigate(`/compras/${c.id}`)} />
             ))}
           </div>
         </div>

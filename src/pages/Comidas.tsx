@@ -41,7 +41,6 @@ export default function Comidas() {
             {r.comida.menu && <div className="sub menu-comida">{r.comida.menu}</div>}
             <div className="sub">
               {r.comida.asistentes.length} comensales
-              {r.ninos > 0 && ` · ${r.ninos} ${r.ninos === 1 ? 'chico' : 'chicos'}`}
             </div>
             <div className="monto">{dinero(r.gastoReal)}</div>
           </div>

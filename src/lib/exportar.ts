@@ -1,5 +1,6 @@
 import type { Encuentro, Estado } from './types';
-import { resumenGeneral, resumenPersonas, tesoreroEfectivo, transferenciasSugeridas } from './calculos';
+import { migrarEstado } from './store';
+import { compradorEfectivo, resumenGeneral, resumenPersonas } from './calculos';
 import { dinero, fechaCorta, nombreComida } from './formato';
 
 /** Versión publicada dentro de claude.ai: sin descargas ni menú de compartir. */
@@ -9,9 +10,8 @@ export const ES_ARTIFACT = import.meta.env.MODE === 'artifact';
 export function textoResumen(enc: Encuentro): string {
   const general = resumenGeneral(enc);
   const personas = resumenPersonas(enc);
-  const nombre = (id: string) => enc.personas.find((p) => p.id === id)?.nombre ?? '?';
-  const transferencias = transferenciasSugeridas(personas.map((p) => ({ id: p.persona.id, saldo: p.saldo })));
-  const tesorero = tesoreroEfectivo(enc);
+  const compradorId = compradorEfectivo(enc);
+  const comprador = enc.personas.find((p) => p.id === compradorId)?.nombre;
 
   const lineas: string[] = [];
   lineas.push(`*${enc.nombre}*`);
@@ -20,22 +20,20 @@ export function textoResumen(enc: Encuentro): string {
   lineas.push(`Gasto real: ${dinero(general.gastoReal)}`);
   if (general.gastosGenerales > 0) lineas.push(`  (incluye ${dinero(general.gastosGenerales)} de gastos generales)`);
   lineas.push(`Total cobrado: ${dinero(general.recaudado)}`);
-  lineas.push(`Fondo común: ${dinero(general.fondo)}${tesorero ? ` (lo guarda ${nombre(tesorero)})` : ''}`);
+  lineas.push(`Fondo común: ${dinero(general.fondo)}`);
   lineas.push('');
   lineas.push('*Comidas*');
   for (const c of general.comidas) {
     lineas.push(
-      `• ${nombreComida(c.comida)}: ${c.pagantes} comensales, ${dinero(c.gastoReal)} → ${dinero(c.cobroPorPersona)} c/u`,
+      `• ${nombreComida(c.comida)}: ${c.comensales} comensales, ${dinero(c.gastoReal)} → ${dinero(c.cobroPorPersona)} c/u`,
     );
   }
   lineas.push('');
-  lineas.push('*Quién paga a quién*');
-  if (transferencias.length === 0) {
-    lineas.push('¡Todo saldado! 🎉');
-  } else {
-    for (const t of transferencias) {
-      lineas.push(`• ${nombre(t.deId)} → ${nombre(t.aId)}: ${dinero(t.importe)}`);
-    }
+  lineas.push(comprador ? `*Cada uno le paga a ${comprador}*` : '*Cuánto paga cada uno*');
+  for (const p of [...personas].sort((a, b) => a.persona.nombre.localeCompare(b.persona.nombre))) {
+    if (p.esComprador) continue;
+    const estado = p.pendiente === 0 ? ' ✅ pagado' : p.pagado > 0 ? ` (falta ${dinero(p.pendiente)})` : '';
+    lineas.push(`• ${p.persona.nombre}: ${dinero(p.aPagar)}${estado}`);
   }
   return lineas.join('\n');
 }
@@ -90,7 +88,7 @@ export function leerCopia(texto: string): Estado | null {
         return null;
       }
     }
-    return datos as Estado;
+    return migrarEstado(datos as Estado);
   } catch {
     return null;
   }

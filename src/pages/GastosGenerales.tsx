@@ -4,15 +4,13 @@ import { useEncuentro } from '../lib/store';
 import { resumenGastosGenerales } from '../lib/calculos';
 import { dinero } from '../lib/formato';
 import { GASTOS_GENERALES } from '../lib/types';
-import { Avatar, Fila, Pantalla, Vacio } from '../components/ui';
+import { FilaCompra, Pantalla, Vacio } from '../components/ui';
 
 export default function GastosGenerales() {
   const { encuentro } = useEncuentro();
   const navigate = useNavigate();
   const g = resumenGastosGenerales(encuentro);
   const compras = encuentro.compras.filter((c) => c.comidaId === GASTOS_GENERALES);
-  const persona = (id: string) => encuentro.personas.find((p) => p.id === id);
-  const ninos = encuentro.personas.length - g.adultos;
 
   return (
     <Pantalla titulo="Gastos generales" atras>
@@ -28,7 +26,7 @@ export default function GastosGenerales() {
           <Users className="ico" size={24} />
           <div>
             <div className="etq">Se reparte entre</div>
-            <div className="valor">{g.adultos}</div>
+            <div className="valor">{g.personas}</div>
           </div>
         </div>
         <div className="tile azul">
@@ -55,17 +53,7 @@ export default function GastosGenerales() {
           </Vacio>
         )}
         {compras.map((c) => (
-          <Fila key={c.id} onClick={() => navigate(`/compras/${c.id}`)}>
-            <Avatar persona={persona(c.personaId)} tam="chico" />
-            <div className="cuerpo">
-              <div className="titulo">{persona(c.personaId)?.nombre ?? 'Persona borrada'}</div>
-              <div className="sub">
-                {c.concepto}
-                {c.observaciones && ` · ${c.observaciones}`}
-              </div>
-            </div>
-            <div className="monto">{dinero(c.importe)}</div>
-          </Fila>
+          <FilaCompra key={c.id} compra={c} onClick={() => navigate(`/compras/${c.id}`)} />
         ))}
         {compras.length > 0 && <div className="kv destacado"><span>Total</span><span className="v">{dinero(g.total)}</span></div>}
       </div>
@@ -73,9 +61,8 @@ export default function GastosGenerales() {
       <div className="aviso">
         <Info size={20} />
         <span>
-          Se reparten en partes iguales entre todos los adultos del encuentro ({g.adultos}
-          {ninos > 0 ? `; los ${ninos} chicos no pagan` : ''}), sin redondeo, así que no suman al fondo común. Si agregás
-          o quitás personas, el reparto se actualiza solo.
+          Se reparten en partes iguales entre todas las personas del encuentro ({g.personas}), sin redondeo, así que
+          no suman al fondo común. Si agregás o quitás personas, el reparto se actualiza solo.
         </span>
       </div>
 

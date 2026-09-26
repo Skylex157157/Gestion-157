@@ -16,8 +16,8 @@ export default function Bienvenida({ onNuevo }: { onNuevo: () => void }) {
       </div>
       <h2>Juntada</h2>
       <p>
-        Anotá quién compró qué en cada comida, y la app calcula cuánto le toca poner a cada uno y quién le
-        tiene que pagar a quién.
+        Anotá lo que se compra para cada comida, y la app calcula cuánto le toca poner a cada uno y quién ya le
+        pagó al que compró todo.
       </p>
       <button className="btn" onClick={onNuevo}>
         Crear mi primer encuentro

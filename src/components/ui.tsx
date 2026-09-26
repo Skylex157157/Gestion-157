@@ -8,13 +8,14 @@ import {
   House,
   Moon,
   ReceiptText,
+  ShoppingBag,
   ShoppingCart,
   Sun,
   Users,
   Utensils,
 } from 'lucide-react';
-import type { Persona, TipoComida } from '../lib/types';
-import { iniciales } from '../lib/formato';
+import type { Compra, Persona, TipoComida } from '../lib/types';
+import { dinero, hora, iniciales } from '../lib/formato';
 
 export function AppBar({
   titulo,
@@ -321,5 +322,25 @@ export function TextoParaCopiar() {
         Copiar
       </button>
     </Hoja>
+  );
+}
+
+/** Una compra en una lista: concepto, detalle, importe y hora. */
+export function FilaCompra({ compra, onClick, sub }: { compra: Compra; onClick?: () => void; sub?: string }) {
+  const detalle = [sub, compra.observaciones].filter(Boolean).join(' · ');
+  return (
+    <Fila onClick={onClick}>
+      <div className="ico-compra">
+        <ShoppingBag size={17} />
+      </div>
+      <div className="cuerpo">
+        <div className="titulo">{compra.concepto}</div>
+        {detalle && <div className="sub">{detalle}</div>}
+      </div>
+      <div className="monto">
+        {dinero(compra.importe)}
+        {compra.creada && <small>{hora(compra.creada)}</small>}
+      </div>
+    </Fila>
   );
 }

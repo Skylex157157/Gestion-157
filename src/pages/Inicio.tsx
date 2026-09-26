@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Banknote, ImagePlus, Menu, Pencil, PiggyBank, Plus, Users, Utensils } from 'lucide-react';
+import { Banknote, ImagePlus, Menu, Pencil, PiggyBank, Plus, ShoppingCart, Users, Utensils } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
-import { ordenarComidas, resumenGeneral } from '../lib/calculos';
+import { compradorEfectivo, ordenarComidas, resumenGeneral } from '../lib/calculos';
 import { dinero, fechaCorta, hoyISO, nombreComida } from '../lib/formato';
 import { Fila, IconoComida, Pantalla } from '../components/ui';
 
@@ -9,6 +9,7 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
   const { encuentro } = useEncuentro();
   const navigate = useNavigate();
   const general = resumenGeneral(encuentro);
+  const comprador = encuentro.personas.find((p) => p.id === compradorEfectivo(encuentro));
 
   const hoy = hoyISO();
   const ordenadas = ordenarComidas(encuentro.comidas);
@@ -55,6 +56,11 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
                 {encuentro.cerrado ? 'Cerrado' : 'Abierto'}
               </span>
             </div>
+            {comprador && (
+              <div className="fechas">
+                <ShoppingCart size={12} style={{ verticalAlign: -1 }} /> Compra todo: {comprador.nombre}
+              </div>
+            )}
           </div>
           <button className="icon-btn" aria-label="Editar encuentro" onClick={() => navigate('/encuentro')}>
             <Pencil size={19} />

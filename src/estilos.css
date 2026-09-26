@@ -945,7 +945,7 @@ table.tabla {
   grid-template-columns: 1fr auto 1fr auto auto;
 }
 
-.transfer .pagado-btn {
+.pagado-btn {
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -955,9 +955,10 @@ table.tabla {
   display: grid;
   place-items: center;
   padding: 0;
+  flex-shrink: 0;
 }
 
-.transfer .pagado-btn:active {
+.pagado-btn:active {
   background: var(--verde-600);
   color: #fff;
 }
@@ -1339,4 +1340,28 @@ table.tabla {
 
 .dia.activo .dia-fecha {
   color: rgba(255, 255, 255, 0.8);
+}
+
+.ico-compra {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--verde-100);
+  color: var(--verde-700);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* Fila con una parte clickeable y un botón de acción aparte */
+.fila-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
 }

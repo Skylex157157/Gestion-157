@@ -30,15 +30,13 @@ export default function Asistentes() {
       c.asistentes = si ? e.personas.map((p) => p.id) : [];
     });
 
-  const adultos = encuentro.personas.filter((p) => !p.esNino && comida.asistentes.includes(p.id)).length;
-
   return (
     <Pantalla titulo="¿Quiénes comieron?" atras>
       <div className="card card-pad" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 600 }}>{nombreComida(comida)}</div>
           <div className="ayuda" style={{ marginTop: 2 }}>
-            {comida.asistentes.length} comensales · {adultos} pagan
+            {comida.asistentes.length} comensales
           </div>
         </div>
         <button className={`btn chico ${todos ? 'borde' : ''}`} onClick={() => marcarTodos(!todos)}>
@@ -68,7 +66,6 @@ export default function Asistentes() {
               <Avatar persona={p} />
               <div className="cuerpo">
                 <div className="titulo">{p.nombre}</div>
-                {p.esNino && <div className="sub">Chico · no paga</div>}
               </div>
               <div className={`check ${si ? 'si' : ''}`}>{si && <Check size={16} strokeWidth={3} />}</div>
             </Fila>

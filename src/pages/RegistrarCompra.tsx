@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Banknote, CalendarDays, FileText, Tag, Trash2, User } from 'lucide-react';
+import { Banknote, CalendarDays, FileText, Tag, Trash2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { GASTOS_GENERALES } from '../lib/types';
 import { ordenarComidas } from '../lib/calculos';
@@ -23,7 +23,6 @@ export default function RegistrarCompra() {
     (comidas.find((c) => c.fecha >= hoyISO()) ?? comidas[comidas.length - 1])?.id ??
     GASTOS_GENERALES;
 
-  const [personaId, setPersonaId] = useState(existente?.personaId ?? '');
   const [comidaId, setComidaId] = useState(comidaInicial);
   const conceptoConocido = !existente || CONCEPTOS.includes(existente.concepto);
   const [concepto, setConcepto] = useState(existente ? (conceptoConocido ? existente.concepto : OTRO) : CONCEPTOS[0]);
@@ -40,21 +39,9 @@ export default function RegistrarCompra() {
     );
   }
 
-  if (encuentro.personas.length === 0) {
-    return (
-      <Pantalla titulo="Registrar compra" atras sinNav>
-        <Vacio icono={<Tag size={36} />}>Para registrar una compra primero tenés que cargar a las personas.</Vacio>
-        <button className="btn" onClick={() => navigate('/personas')}>
-          Ir a Personas
-        </button>
-      </Pantalla>
-    );
-  }
-
   const monto = parsearImporte(importe);
   const conceptoFinal = concepto === OTRO ? conceptoLibre.trim() : concepto;
   const errores = {
-    persona: !personaId && 'Elegí quién hizo la compra',
     comida: !comidaId && 'Elegí la comida',
     concepto: !conceptoFinal && 'Escribí el concepto',
     importe: monto <= 0 && 'Ingresá el importe',
@@ -67,11 +54,10 @@ export default function RegistrarCompra() {
     actualizar((e) => {
       if (existente) {
         const c = e.compras.find((x) => x.id === existente.id);
-        if (c) Object.assign(c, { personaId, comidaId, concepto: conceptoFinal, importe: monto, observaciones: obs.trim() });
+        if (c) Object.assign(c, { comidaId, concepto: conceptoFinal, importe: monto, observaciones: obs.trim() });
       } else {
         e.compras.push({
           id: nuevoId(),
-          personaId,
           comidaId,
           concepto: conceptoFinal,
           importe: monto,
@@ -97,24 +83,6 @@ export default function RegistrarCompra() {
     <Pantalla titulo={existente ? 'Editar compra' : 'Registrar compra'} atras sinNav>
       <div className="card card-pad">
         <div className="campo">
-          <label htmlFor="rc-persona">Persona que compra</label>
-          <div className="control">
-            <User size={20} />
-            <select id="rc-persona" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
-              <option value="">Elegir persona…</option>
-              {[...encuentro.personas]
-                .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-            </select>
-          </div>
-          {intentado && errores.persona && <div className="error">{errores.persona}</div>}
-        </div>
-
-        <div className="campo">
           <label htmlFor="rc-comida">Asignar a</label>
           <div className="control">
             <CalendarDays size={20} />
@@ -130,7 +98,7 @@ export default function RegistrarCompra() {
           </div>
           {comidaId === GASTOS_GENERALES && (
             <div className="ayuda">
-              Nafta, alquiler, limpieza… Se reparte en partes iguales entre todos los adultos y no suma al fondo común.
+              Nafta, alquiler, limpieza… Se reparte en partes iguales entre todos y no suma al fondo común.
             </div>
           )}
           {intentado && errores.comida && <div className="error">{errores.comida}</div>}

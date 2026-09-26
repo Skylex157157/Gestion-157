@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, CircleCheck, Search, UserPlus, Users } from 'lucide-react';
+import { Check, CircleCheck, Search, ShoppingCart, UserPlus, Users } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
-import { ordenarComidas, resumenPersonas } from '../lib/calculos';
+import { compradorEfectivo, ordenarComidas, resumenPersonas } from '../lib/calculos';
 import { COLORES_PERSONA, dinero, nombreComida, nuevoId } from '../lib/formato';
 import type { Persona } from '../lib/types';
 import { Avatar, Fila, Hoja, IconoComida, Pantalla, Switch, Vacio } from '../components/ui';
@@ -35,30 +35,27 @@ export default function Personas() {
         {encuentro.personas.length === 0 && (
           <Vacio icono={<Users size={40} />}>Agregá a todos los que participan del encuentro.</Vacio>
         )}
-        {resumen.map((r) => {
-          const saldo = Math.round(r.saldo);
-          return (
-            <Fila key={r.persona.id} onClick={() => navigate(`/personas/${r.persona.id}`)}>
-              <Avatar persona={r.persona} />
-              <div className="cuerpo">
-                <div className="titulo">{r.persona.nombre}</div>
-                <div className="sub">
-                  Comidas: {r.comidas}
-                  {r.persona.esNino && ' · Chico'}
-                </div>
+        {resumen.map((r) => (
+          <Fila key={r.persona.id} onClick={() => navigate(`/personas/${r.persona.id}`)}>
+            <Avatar persona={r.persona} />
+            <div className="cuerpo">
+              <div className="titulo">{r.persona.nombre}</div>
+              <div className="sub">Comidas: {r.comidas}</div>
+            </div>
+            {r.esComprador ? (
+              <span className="chip">
+                <ShoppingCart size={12} style={{ verticalAlign: -1 }} /> Compra todo
+              </span>
+            ) : r.pendiente === 0 ? (
+              <CircleCheck size={22} className="positivo" aria-label="Pagó" />
+            ) : (
+              <div className="monto negativo">
+                {dinero(r.pendiente)}
+                <small>debe</small>
               </div>
-              {saldo === 0 ? (
-                <CircleCheck size={22} className="positivo" aria-label="Saldado" />
-              ) : (
-                <div className={`monto ${saldo > 0 ? 'positivo' : 'negativo'}`}>
-                  {saldo > 0 ? '+' : ''}
-                  {dinero(saldo)}
-                  <small>{saldo > 0 ? 'le deben' : 'debe'}</small>
-                </div>
-              )}
-            </Fila>
-          );
-        })}
+            )}
+          </Fila>
+        ))}
       </div>
 
       <button className="btn" onClick={() => setAgregando(true)}>
@@ -73,7 +70,7 @@ export default function Personas() {
 export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar: () => void }) {
   const { encuentro, actualizar } = useEncuentro();
   const [nombre, setNombre] = useState(persona?.nombre ?? '');
-  const [esNino, setEsNino] = useState(persona?.esNino ?? false);
+  const [esComprador, setEsComprador] = useState(!!persona && compradorEfectivo(encuentro) === persona.id);
   const comidas = ordenarComidas(encuentro.comidas);
   const [elegidas, setElegidas] = useState<string[]>(() =>
     persona ? comidas.filter((c) => c.asistentes.includes(persona.id)).map((c) => c.id) : comidas.map((c) => c.id),
@@ -95,12 +92,13 @@ export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar
         const p = e.personas.find((x) => x.id === persona.id);
         if (p) {
           p.nombre = limpio;
-          p.esNino = esNino;
         }
       } else {
         id = nuevoId();
-        e.personas.push({ id, nombre: limpio, esNino, color: COLORES_PERSONA[e.personas.length % COLORES_PERSONA.length] });
+        e.personas.push({ id, nombre: limpio, color: COLORES_PERSONA[e.personas.length % COLORES_PERSONA.length] });
       }
+      if (esComprador) e.compradorId = id!;
+      else if (e.compradorId === id) e.compradorId = null;
       for (const c of e.comidas) {
         const va = elegidas.includes(c.id);
         const esta = c.asistentes.includes(id!);
@@ -110,6 +108,7 @@ export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar
     });
     if (seguir) {
       setNombre('');
+      setEsComprador(false);
       setAgregados((n) => n + 1);
     } else {
       onCerrar();
@@ -136,11 +135,11 @@ export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar
       <div className="campo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <span className="etiqueta" style={{ margin: 0 }}>
-            Es chico
+            Compra todo
           </span>
-          <div className="ayuda">Come pero no paga: su parte se reparte entre los adultos.</div>
+          <div className="ayuda">Hace todas las compras: los demás le pagan a esta persona.</div>
         </div>
-        <Switch checked={esNino} onChange={setEsNino} />
+        <Switch checked={esComprador} onChange={setEsComprador} />
       </div>
       {comidas.length > 0 && (
         <div className="campo">

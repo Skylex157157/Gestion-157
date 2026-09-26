@@ -3,7 +3,7 @@ import { CalendarDays, Utensils } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { ordenarComidas, resumenComida } from '../lib/calculos';
 import { dinero, nombreComida } from '../lib/formato';
-import { Avatar, Fila, KV, Pantalla, Vacio } from '../components/ui';
+import { FilaCompra, KV, Pantalla, Vacio } from '../components/ui';
 
 export default function ResumenComida() {
   const { encuentro } = useEncuentro();
@@ -22,7 +22,6 @@ export default function ResumenComida() {
 
   const r = resumenComida(encuentro, comida);
   const compras = encuentro.compras.filter((c) => c.comidaId === comida.id);
-  const persona = (id: string) => encuentro.personas.find((p) => p.id === id);
 
   return (
     <Pantalla titulo="Resumen por comida" atras>
@@ -39,7 +38,6 @@ export default function ResumenComida() {
 
       <div className="lista">
         <KV k="Comensales" v={comida.asistentes.length} />
-        {r.ninos > 0 && <KV k="Chicos (no pagan)" v={r.ninos} />}
         <KV k="Gasto real" v={dinero(r.gastoReal)} />
         <KV k="Cobro por persona" v={dinero(r.cobroPorPersona)} />
         <KV k="Recaudado" v={dinero(r.recaudado)} />
@@ -50,14 +48,7 @@ export default function ResumenComida() {
       <div className="lista">
         {compras.length === 0 && <div className="vacio">Sin compras.</div>}
         {compras.map((c) => (
-          <Fila key={c.id} onClick={() => navigate(`/compras/${c.id}`)}>
-            <Avatar persona={persona(c.personaId)} tam="chico" />
-            <div className="cuerpo">
-              <div className="titulo">{persona(c.personaId)?.nombre ?? 'Persona borrada'}</div>
-              <div className="sub">{c.concepto}</div>
-            </div>
-            <div className="monto">{dinero(c.importe)}</div>
-          </Fila>
+          <FilaCompra key={c.id} compra={c} onClick={() => navigate(`/compras/${c.id}`)} />
         ))}
       </div>
 

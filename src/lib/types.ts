@@ -3,8 +3,6 @@ export type TipoComida = 'desayuno' | 'almuerzo' | 'merienda' | 'cena';
 export interface Persona {
   id: string;
   nombre: string;
-  /** Los chicos comen pero no pagan: su parte se reparte entre los adultos. */
-  esNino: boolean;
   color: string;
 }
 
@@ -21,16 +19,16 @@ export interface Comida {
   asistentes: string[];
 }
 
-/** comidaId de las compras que no son de una comida: se reparten entre todos los adultos. */
+/** comidaId de las compras que no son de una comida: se reparten entre todos. */
 export const GASTOS_GENERALES = 'generales';
 
 export type MetodoPago = 'efectivo' | 'transferencia';
 
+/** Todas las compras las hace el comprador del encuentro. */
 export interface Compra {
   id: string;
   /** Id de la comida, o GASTOS_GENERALES */
   comidaId: string;
-  personaId: string;
   concepto: string;
   importe: number;
   observaciones: string;
@@ -38,14 +36,13 @@ export interface Compra {
   creada: string;
 }
 
-/** Una transferencia ya realizada entre dos personas para saldar cuentas. */
+/** Lo que una persona le pagó al comprador. */
 export interface Pago {
   id: string;
-  deId: string;
-  aId: string;
+  personaId: string;
   importe: number;
   fecha: string;
-  metodo?: MetodoPago;
+  metodo: MetodoPago;
 }
 
 export interface Encuentro {
@@ -55,8 +52,8 @@ export interface Encuentro {
   fechaFin: string;
   /** El cobro por persona se redondea hacia arriba a este múltiplo */
   redondeo: number;
-  /** Persona que guarda el fondo común */
-  tesoreroId: string | null;
+  /** La persona que compra todo: los demás le pagan a ella, y se queda con el fondo común */
+  compradorId: string | null;
   /** Encuentro cerrado para liquidar. No bloquea los cambios. */
   cerrado?: boolean;
   /** Foto de portada como data URL (opcional) */
