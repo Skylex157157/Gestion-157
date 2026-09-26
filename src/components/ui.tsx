@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   ChevronRight,
@@ -27,6 +27,7 @@ export function AppBar({
   acciones?: ReactNode;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   return (
     <header className="appbar">
       {atras && (
@@ -35,7 +36,7 @@ export function AppBar({
           aria-label="Volver"
           onClick={() => {
             if (typeof atras === 'string') navigate(atras);
-            else if (window.history.length > 1) navigate(-1);
+            else if (location.key !== 'default') navigate(-1);
             else navigate('/');
           }}
         >
@@ -218,5 +219,107 @@ export function Pantalla({
       <main className={`contenido ${sinNav ? 'sin-nav' : ''}`}>{children}</main>
       {!sinNav && <BottomNav />}
     </>
+  );
+}
+
+interface PedidoConfirmacion {
+  mensaje: string;
+  aceptar: string;
+  peligro: boolean;
+  resolver: (ok: boolean) => void;
+}
+
+let confirmarGlobal: ((p: PedidoConfirmacion) => void) | null = null;
+
+/** Pide confirmación con un diálogo propio (los de sistema no funcionan en todos lados). */
+export function confirmar(mensaje: string, opciones?: { aceptar?: string; peligro?: boolean }): Promise<boolean> {
+  return new Promise((resolver) => {
+    if (!confirmarGlobal) return resolver(false);
+    confirmarGlobal({
+      mensaje,
+      aceptar: opciones?.aceptar ?? 'Aceptar',
+      peligro: opciones?.peligro ?? true,
+      resolver,
+    });
+  });
+}
+
+export function Confirmaciones() {
+  const [pedido, setPedido] = useState<PedidoConfirmacion | null>(null);
+  useEffect(() => {
+    confirmarGlobal = setPedido;
+    return () => {
+      confirmarGlobal = null;
+    };
+  }, []);
+  if (!pedido) return null;
+  const responder = (ok: boolean) => {
+    pedido.resolver(ok);
+    setPedido(null);
+  };
+  return (
+    <Hoja titulo="¿Estás seguro?" onCerrar={() => responder(false)}>
+      <p style={{ margin: '0 0 20px', color: 'var(--texto-2)', lineHeight: 1.45 }}>{pedido.mensaje}</p>
+      <button className={`btn ${pedido.peligro ? 'peligro' : ''}`} onClick={() => responder(true)}>
+        {pedido.aceptar}
+      </button>
+      <button className="btn borde" style={{ border: 0 }} onClick={() => responder(false)}>
+        Cancelar
+      </button>
+    </Hoja>
+  );
+}
+
+let mostrarTextoGlobal: ((t: { titulo: string; texto: string }) => void) | null = null;
+
+/** Muestra un texto largo para copiar a mano (cuando no se puede compartir ni descargar). */
+export function mostrarTexto(titulo: string, texto: string) {
+  mostrarTextoGlobal?.({ titulo, texto });
+}
+
+export function TextoParaCopiar() {
+  const [datos, setDatos] = useState<{ titulo: string; texto: string } | null>(null);
+  useEffect(() => {
+    mostrarTextoGlobal = setDatos;
+    return () => {
+      mostrarTextoGlobal = null;
+    };
+  }, []);
+  if (!datos) return null;
+  const copiar = async (area: HTMLTextAreaElement | null) => {
+    try {
+      await navigator.clipboard.writeText(datos.texto);
+      avisar('Copiado');
+    } catch {
+      area?.select();
+      avisar('Seleccioná el texto y copialo');
+    }
+  };
+  let area: HTMLTextAreaElement | null = null;
+  return (
+    <Hoja titulo={datos.titulo} onCerrar={() => setDatos(null)}>
+      <textarea
+        id="texto-para-copiar"
+        ref={(el) => {
+          area = el;
+        }}
+        readOnly
+        value={datos.texto}
+        onFocus={(e) => e.target.select()}
+        style={{
+          width: '100%',
+          height: '40dvh',
+          border: '1.5px solid var(--borde)',
+          borderRadius: 10,
+          padding: 12,
+          fontSize: 13,
+          fontFamily: 'ui-monospace, Menlo, Consolas, monospace',
+          marginBottom: 12,
+        }}
+      />
+      <button className="btn" onClick={() => copiar(area)}>
+        Copiar
+      </button>
+    </Hoja>
   );
 }

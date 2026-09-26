@@ -2,6 +2,9 @@ import type { Encuentro, Estado } from './types';
 import { resumenGeneral, resumenPersonas, tesoreroEfectivo, transferenciasSugeridas } from './calculos';
 import { dinero, fechaCorta, nombreComida } from './formato';
 
+/** Versión publicada dentro de claude.ai: sin descargas ni menú de compartir. */
+export const ES_ARTIFACT = import.meta.env.MODE === 'artifact';
+
 /** Resumen en texto plano, pensado para pegar en WhatsApp. */
 export function textoResumen(enc: Encuentro): string {
   const general = resumenGeneral(enc);
@@ -38,7 +41,8 @@ export function textoResumen(enc: Encuentro): string {
 
 export async function compartirTexto(titulo: string, texto: string): Promise<'compartido' | 'copiado' | 'error'> {
   try {
-    if (navigator.share) {
+    // Dentro de claude.ai el menú de compartir del sistema no está disponible
+    if (navigator.share && !ES_ARTIFACT) {
       await navigator.share({ title: titulo, text: texto });
       return 'compartido';
     }

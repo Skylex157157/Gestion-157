@@ -4,7 +4,7 @@ import { ArrowRight, Check, CircleCheck, Undo2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenPersonas, transferenciasSugeridas, type Transferencia } from '../lib/calculos';
 import { dinero, fechaCorta, hoyISO, nuevoId } from '../lib/formato';
-import { Avatar, Fila, Pantalla, avisar } from '../components/ui';
+import { Avatar, Fila, Pantalla, avisar, confirmar } from '../components/ui';
 
 export default function Cobranza() {
   const { encuentro, actualizar } = useEncuentro();
@@ -22,8 +22,8 @@ export default function Cobranza() {
     avisar(`Pago de ${nombre(t.deId)} registrado`);
   };
 
-  const deshacer = (id: string) => {
-    if (!confirm('¿Deshacer este pago?')) return;
+  const deshacer = async (id: string) => {
+    if (!(await confirmar('El pago se va a quitar y la deuda vuelve a aparecer.', { aceptar: 'Deshacer pago' }))) return;
     actualizar((e) => {
       e.pagos = e.pagos.filter((p) => p.id !== id);
     });

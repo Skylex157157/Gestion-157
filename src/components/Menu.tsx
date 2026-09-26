@@ -2,9 +2,25 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, Check, Download, Pencil, Plus, Share2, Upload } from 'lucide-react';
 import { useStore } from '../lib/store';
-import { compartirTexto, copiaDeSeguridad, descargarArchivo, leerCopia, textoResumen } from '../lib/exportar';
+import {
+  ES_ARTIFACT,
+  compartirTexto,
+  copiaDeSeguridad,
+  descargarArchivo,
+  leerCopia,
+  textoResumen,
+} from '../lib/exportar';
+import type { Encuentro } from '../lib/types';
 import { fechaCorta, hoyISO } from '../lib/formato';
-import { avisar } from './ui';
+import { avisar, confirmar, mostrarTexto } from './ui';
+
+/** Comparte el resumen por WhatsApp, o lo copia, o lo muestra para copiar a mano. */
+export async function compartirResumen(encuentro: Encuentro) {
+  const texto = textoResumen(encuentro);
+  const r = await compartirTexto(encuentro.nombre, texto);
+  if (r === 'copiado') avisar('Resumen copiado. Pegalo en WhatsApp.');
+  if (r === 'error') mostrarTexto('Resumen para WhatsApp', texto);
+}
 
 export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNuevo: () => void }) {
   const { estado, encuentro, activar, reemplazarTodo } = useStore();
@@ -18,16 +34,18 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
 
   const compartir = async () => {
     if (!encuentro) return;
-    const r = await compartirTexto(encuentro.nombre, textoResumen(encuentro));
-    if (r === 'copiado') avisar('Resumen copiado. Pegalo en WhatsApp.');
-    if (r === 'error') avisar('No se pudo compartir el resumen');
     onCerrar();
+    await compartirResumen(encuentro);
   };
 
   const exportar = () => {
+    onCerrar();
+    if (ES_ARTIFACT) {
+      mostrarTexto('Copia de seguridad', copiaDeSeguridad(estado));
+      return;
+    }
     descargarArchivo(`juntada-copia-${hoyISO()}.json`, copiaDeSeguridad(estado));
     avisar('Copia de seguridad descargada');
-    onCerrar();
   };
 
   const importar = async (f: File) => {
@@ -36,7 +54,10 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
       avisar('El archivo no es una copia válida de Juntada');
       return;
     }
-    if (!confirm('Esto reemplaza todos los datos de este teléfono por los del archivo. ¿Continuar?')) return;
+    const ok = await confirmar('Esto reemplaza todos los datos de este teléfono por los del archivo.', {
+      aceptar: 'Reemplazar datos',
+    });
+    if (!ok) return;
     reemplazarTodo(datos);
     avisar('Datos restaurados');
     onCerrar();

@@ -4,7 +4,7 @@ import { AlertTriangle, Pencil, Plus, ShoppingCart, Trash2, Users } from 'lucide
 import { useEncuentro } from '../lib/store';
 import { resumenComida } from '../lib/calculos';
 import { dinero, fechaLarga, hora, NOMBRE_TIPO } from '../lib/formato';
-import { Avatar, Fila, IconoComida, KV, Pantalla, Vacio } from '../components/ui';
+import { Avatar, Fila, IconoComida, KV, Pantalla, Vacio, confirmar } from '../components/ui';
 import { FormComida } from './Comidas';
 
 export default function DetalleComida() {
@@ -21,11 +21,11 @@ export default function DetalleComida() {
     .sort((a, b) => a.creada.localeCompare(b.creada));
   const persona = (pid: string) => encuentro.personas.find((p) => p.id === pid);
 
-  const eliminar = () => {
+  const eliminar = async () => {
     const aviso = compras.length
-      ? `Se va a borrar la comida y sus ${compras.length} compras. ¿Continuar?`
-      : '¿Borrar esta comida?';
-    if (!confirm(aviso)) return;
+      ? `Se va a borrar la comida y sus ${compras.length} compras.`
+      : 'Se va a borrar esta comida.';
+    if (!(await confirmar(aviso, { aceptar: 'Borrar comida' }))) return;
     actualizar((e) => {
       e.comidas = e.comidas.filter((c) => c.id !== comida.id);
       e.compras = e.compras.filter((c) => c.comidaId !== comida.id);

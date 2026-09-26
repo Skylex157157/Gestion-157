@@ -4,7 +4,7 @@ import { ArrowRight, Pencil, PiggyBank, Trash2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenComida, resumenPersonas, ordenarComidas, transferenciasSugeridas } from '../lib/calculos';
 import { dinero, nombreComida } from '../lib/formato';
-import { Avatar, Fila, IconoComida, KV, Pantalla, avisar } from '../components/ui';
+import { Avatar, Fila, IconoComida, KV, Pantalla, avisar, confirmar } from '../components/ui';
 import { FormPersona } from './Personas';
 
 export default function LiquidacionPersona() {
@@ -28,13 +28,13 @@ export default function LiquidacionPersona() {
   const comidas = ordenarComidas(encuentro.comidas).filter((c) => c.asistentes.includes(persona.id));
   const compras = encuentro.compras.filter((c) => c.personaId === persona.id);
 
-  const eliminar = () => {
+  const eliminar = async () => {
     const tienePagos = encuentro.pagos.some((p) => p.deId === persona.id || p.aId === persona.id);
     if (compras.length || tienePagos) {
       avisar('No se puede borrar: tiene compras o pagos registrados. Borralos primero.');
       return;
     }
-    if (!confirm(`¿Borrar a ${persona.nombre}?`)) return;
+    if (!(await confirmar(`Se va a borrar a ${persona.nombre} del encuentro.`, { aceptar: 'Borrar persona' }))) return;
     actualizar((e) => {
       e.personas = e.personas.filter((p) => p.id !== persona.id);
       e.comidas.forEach((c) => (c.asistentes = c.asistentes.filter((x) => x !== persona.id)));

@@ -2,23 +2,19 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeftRight, Banknote, ClipboardList, PiggyBank, Share2, UserRound, Users, Utensils } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenGeneral } from '../lib/calculos';
-import { compartirTexto, textoResumen } from '../lib/exportar';
+import { compartirResumen } from '../components/Menu';
 import { dinero, nombreComidaCorto } from '../lib/formato';
 
 /** Versión compacta para la tabla: "$60.000" */
 const corto = (v: number) => dinero(v).replace('$ ', '$');
-import { IconoComida, Pantalla, avisar } from '../components/ui';
+import { IconoComida, Pantalla } from '../components/ui';
 
 export default function ResumenGeneral() {
   const { encuentro } = useEncuentro();
   const navigate = useNavigate();
   const g = resumenGeneral(encuentro);
 
-  const compartir = async () => {
-    const r = await compartirTexto(encuentro.nombre, textoResumen(encuentro));
-    if (r === 'copiado') avisar('Resumen copiado. Pegalo en WhatsApp.');
-    if (r === 'error') avisar('No se pudo compartir el resumen');
-  };
+  const compartir = () => compartirResumen(encuentro);
 
   return (
     <Pantalla

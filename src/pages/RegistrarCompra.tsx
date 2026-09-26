@@ -4,7 +4,7 @@ import { Banknote, CalendarDays, FileText, Tag, Trash2, User } from 'lucide-reac
 import { useEncuentro } from '../lib/store';
 import { ordenarComidas } from '../lib/calculos';
 import { CONCEPTOS, dinero, hoyISO, nombreComida, nuevoId, parsearImporte } from '../lib/formato';
-import { Pantalla, Vacio, avisar } from '../components/ui';
+import { Pantalla, Vacio, avisar, confirmar } from '../components/ui';
 
 const OTRO = '__otro__';
 
@@ -95,8 +95,8 @@ export default function RegistrarCompra() {
     navigate(-1);
   };
 
-  const eliminar = () => {
-    if (!existente || !confirm('¿Borrar esta compra?')) return;
+  const eliminar = async () => {
+    if (!existente || !(await confirmar('Se va a borrar esta compra.', { aceptar: 'Borrar compra' }))) return;
     actualizar((e) => {
       e.compras = e.compras.filter((c) => c.id !== existente.id);
     });

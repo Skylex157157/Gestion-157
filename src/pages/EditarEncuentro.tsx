@@ -4,7 +4,7 @@ import { CalendarDays, ImagePlus, PartyPopper, Trash2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { dinero, fechaCorta, nombreComida } from '../lib/formato';
 import { tesoreroEfectivo } from '../lib/calculos';
-import { Pantalla, avisar } from '../components/ui';
+import { Pantalla, avisar, confirmar } from '../components/ui';
 
 const REDONDEOS = [1, 100, 500, 1000, 2000, 5000];
 
@@ -65,8 +65,12 @@ export default function EditarEncuentro() {
     }
   };
 
-  const borrar = () => {
-    if (!confirm(`¿Borrar "${encuentro.nombre}" con todas sus comidas, compras y pagos? No se puede deshacer.`)) return;
+  const borrar = async () => {
+    const ok = await confirmar(
+      `Se va a borrar "${encuentro.nombre}" con todas sus comidas, compras y pagos. No se puede deshacer.`,
+      { aceptar: 'Borrar encuentro' },
+    );
+    if (!ok) return;
     eliminarEncuentro(encuentro.id);
     navigate('/', { replace: true });
   };

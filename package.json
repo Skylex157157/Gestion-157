@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "build:artifact": "node scripts/artifact.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.48.0",

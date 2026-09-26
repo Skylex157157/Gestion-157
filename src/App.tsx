@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useStore } from './lib/store';
 import { MenuLateral } from './components/Menu';
 import { NuevoEncuentro } from './components/NuevoEncuentro';
-import { Toasts } from './components/ui';
+import { Confirmaciones, TextoParaCopiar, Toasts } from './components/ui';
 import Bienvenida from './pages/Bienvenida';
 import Inicio from './pages/Inicio';
 import Comidas from './pages/Comidas';
@@ -54,6 +54,8 @@ export default function App() {
       )}
       {menu && <MenuLateral onCerrar={() => setMenu(false)} onNuevo={() => setNuevo(true)} />}
       {nuevo && <NuevoEncuentro onCerrar={() => setNuevo(false)} />}
+      <Confirmaciones />
+      <TextoParaCopiar />
       <Toasts />
     </div>
   );
