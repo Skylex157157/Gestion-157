@@ -1,6 +1,6 @@
 import type { Encuentro, Estado } from './types';
 import { migrarEstado } from './store';
-import { compradorEfectivo, resumenGeneral, resumenPersonas } from './calculos';
+import { administradorEfectivo, resumenGeneral, resumenPersonas } from './calculos';
 import { dinero, fechaCorta, nombreComida } from './formato';
 
 /** Versión publicada dentro de claude.ai: sin descargas ni menú de compartir. */
@@ -10,8 +10,8 @@ export const ES_ARTIFACT = import.meta.env.MODE === 'artifact';
 export function textoResumen(enc: Encuentro): string {
   const general = resumenGeneral(enc);
   const personas = resumenPersonas(enc);
-  const compradorId = compradorEfectivo(enc);
-  const comprador = enc.personas.find((p) => p.id === compradorId)?.nombre;
+  const administradorId = administradorEfectivo(enc);
+  const administrador = enc.personas.find((p) => p.id === administradorId)?.nombre;
 
   const lineas: string[] = [];
   lineas.push(`*${enc.nombre}*`);
@@ -29,11 +29,12 @@ export function textoResumen(enc: Encuentro): string {
     );
   }
   lineas.push('');
-  lineas.push(comprador ? `*Cada uno le paga a ${comprador}*` : '*Cuánto paga cada uno*');
+  lineas.push(administrador ? `*Cuentas con ${administrador}* (maneja la plata)` : '*Cuentas*');
   for (const p of [...personas].sort((a, b) => a.persona.nombre.localeCompare(b.persona.nombre))) {
-    if (p.esComprador) continue;
-    const estado = p.pendiente === 0 ? ' ✅ pagado' : p.pagado > 0 ? ` (falta ${dinero(p.pendiente)})` : '';
-    lineas.push(`• ${p.persona.nombre}: ${dinero(p.aPagar)}${estado}`);
+    if (p.esAdministrador) continue;
+    const estado =
+      p.saldo > 0 ? `debe ${dinero(p.saldo)}` : p.saldo < 0 ? `se le devuelven ${dinero(-p.saldo)}` : 'al día ✅';
+    lineas.push(`• ${p.persona.nombre}: ${estado}`);
   }
   return lineas.join('\n');
 }

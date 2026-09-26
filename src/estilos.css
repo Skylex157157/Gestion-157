@@ -1342,16 +1342,6 @@ table.tabla {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.ico-compra {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--verde-100);
-  color: var(--verde-700);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
 
 /* Fila con una parte clickeable y un botón de acción aparte */
 .fila-link {
@@ -1364,4 +1354,25 @@ table.tabla {
   border: 0;
   padding: 0;
   text-align: left;
+}
+
+/* Sugerencias debajo de un campo de texto */
+.sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sugerencia {
+  border: 1px solid var(--borde);
+  background: var(--verde-50);
+  color: var(--verde-800);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.sugerencia:active {
+  background: var(--verde-100);
 }

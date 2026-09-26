@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Info, PiggyBank } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
-import { compradorEfectivo, resumenGeneral } from '../lib/calculos';
+import { administradorEfectivo, resumenGeneral } from '../lib/calculos';
 import { dinero, nombreComidaCorto } from '../lib/formato';
 import { Avatar, Fila, IconoComida, Pantalla } from '../components/ui';
 
@@ -9,8 +9,8 @@ export default function FondoComun() {
   const { encuentro } = useEncuentro();
   const navigate = useNavigate();
   const g = resumenGeneral(encuentro);
-  const compradorId = compradorEfectivo(encuentro);
-  const comprador = encuentro.personas.find((p) => p.id === compradorId);
+  const administradorId = administradorEfectivo(encuentro);
+  const administrador = encuentro.personas.find((p) => p.id === administradorId);
 
   return (
     <Pantalla titulo="Fondo común" atras>
@@ -24,11 +24,11 @@ export default function FondoComun() {
 
       <div className="seccion-titulo">Quién lo guarda</div>
       <div className="lista">
-        <Fila onClick={() => comprador && navigate(`/personas/${comprador.id}`)}>
-          <Avatar persona={comprador} tam="chico" />
+        <Fila onClick={() => administrador && navigate(`/personas/${administrador.id}`)}>
+          <Avatar persona={administrador} tam="chico" />
           <div className="cuerpo">
-            <div className="titulo">{comprador?.nombre ?? 'Sin comprador'}</div>
-            <div className="sub">Compra todo y se queda con el fondo</div>
+            <div className="titulo">{administrador?.nombre ?? 'Sin elegir'}</div>
+            <div className="sub">Maneja la plata y guarda el fondo</div>
           </div>
         </Fila>
       </div>
@@ -52,7 +52,7 @@ export default function FondoComun() {
         <span>
           Este dinero proviene de las diferencias entre el costo real de cada comida y el importe cobrado a los
           comensales (por el redondeo a {dinero(encuentro.redondeo)}). Queda para el grupo
-          {comprador ? ` y lo guarda ${comprador.nombre}` : ''}.
+          {administrador ? ` y lo guarda ${administrador.nombre}` : ''}.
         </span>
       </div>
     </Pantalla>

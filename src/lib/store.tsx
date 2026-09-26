@@ -8,20 +8,40 @@ function estadoVacio(): Estado {
   return { version: 1, encuentroActivoId: null, encuentros: [] };
 }
 
+/** Campos de versiones anteriores que ya no se usan */
+type EncuentroViejo = Encuentro & {
+  tesoreroId?: string | null;
+  compradorId?: string | null;
+};
+
 /**
- * Adapta datos guardados por versiones anteriores de la app: el antiguo
- * "tesorero" pasa a ser el comprador, y se descartan los pagos entre personas.
+ * Adapta datos guardados por versiones anteriores de la app:
+ * - el antiguo "tesorero" o "comprador" pasa a ser quien maneja la plata;
+ * - las compras sin persona se asignan a quien maneja la plata, y las
+ *   observaciones se suman a la descripción;
+ * - se descartan los pagos viejos entre personas.
  */
 export function migrarEstado(estado: Estado): Estado {
   return {
     ...estado,
-    encuentros: estado.encuentros.map((e) => {
-      const viejo = e as Encuentro & { tesoreroId?: string | null };
-      const { tesoreroId, ...resto } = viejo;
+    encuentros: estado.encuentros.map((viejo: EncuentroViejo) => {
+      const { tesoreroId, compradorId, ...e } = viejo;
+      const administradorId = e.administradorId ?? compradorId ?? tesoreroId ?? null;
+      const porDefecto = administradorId ?? e.personas[0]?.id ?? '';
       return {
-        ...resto,
-        compradorId: viejo.compradorId ?? tesoreroId ?? null,
-        pagos: (e.pagos ?? []).filter((p) => typeof p.personaId === 'string' && !!p.metodo),
+        ...e,
+        administradorId,
+        compras: e.compras.map((c) => {
+          const { observaciones, ...compra } = c as typeof c & { observaciones?: string };
+          return {
+            ...compra,
+            personaId: compra.personaId ?? porDefecto,
+            concepto: observaciones ? `${compra.concepto} · ${observaciones}` : compra.concepto,
+          };
+        }),
+        pagos: (e.pagos ?? [])
+          .filter((p) => typeof p.personaId === 'string' && !!p.metodo)
+          .map((p) => ({ ...p, tipo: p.tipo ?? 'pago' })),
       };
     }),
   };
@@ -46,7 +66,7 @@ export function encuentroNuevo(nombre: string, fechaInicio: string, fechaFin: st
     fechaInicio,
     fechaFin,
     redondeo: 1000,
-    compradorId: null,
+    administradorId: null,
     foto: null,
     personas: [],
     comidas: [],

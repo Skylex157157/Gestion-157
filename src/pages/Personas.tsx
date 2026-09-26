@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, CircleCheck, Search, ShoppingCart, UserPlus, Users } from 'lucide-react';
+import { Check, CircleCheck, Search, UserPlus, Users, Wallet } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
-import { compradorEfectivo, ordenarComidas, resumenPersonas } from '../lib/calculos';
+import { administradorEfectivo, ordenarComidas, resumenPersonas } from '../lib/calculos';
 import { COLORES_PERSONA, dinero, nombreComida, nuevoId } from '../lib/formato';
 import type { Persona } from '../lib/types';
 import { Avatar, Fila, Hoja, IconoComida, Pantalla, Switch, Vacio } from '../components/ui';
@@ -42,16 +42,21 @@ export default function Personas() {
               <div className="titulo">{r.persona.nombre}</div>
               <div className="sub">Comidas: {r.comidas}</div>
             </div>
-            {r.esComprador ? (
+            {r.esAdministrador ? (
               <span className="chip">
-                <ShoppingCart size={12} style={{ verticalAlign: -1 }} /> Compra todo
+                <Wallet size={12} style={{ verticalAlign: -1 }} /> Maneja la plata
               </span>
-            ) : r.pendiente === 0 ? (
-              <CircleCheck size={22} className="positivo" aria-label="Pagó" />
-            ) : (
+            ) : r.saldo === 0 ? (
+              <CircleCheck size={22} className="positivo" aria-label="Al día" />
+            ) : r.saldo > 0 ? (
               <div className="monto negativo">
-                {dinero(r.pendiente)}
+                {dinero(r.saldo)}
                 <small>debe</small>
+              </div>
+            ) : (
+              <div className="monto" style={{ color: 'var(--azul)' }}>
+                {dinero(-r.saldo)}
+                <small>se le devuelve</small>
               </div>
             )}
           </Fila>
@@ -70,7 +75,7 @@ export default function Personas() {
 export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar: () => void }) {
   const { encuentro, actualizar } = useEncuentro();
   const [nombre, setNombre] = useState(persona?.nombre ?? '');
-  const [esComprador, setEsComprador] = useState(!!persona && compradorEfectivo(encuentro) === persona.id);
+  const [esAdministrador, setEsAdministrador] = useState(!!persona && administradorEfectivo(encuentro) === persona.id);
   const comidas = ordenarComidas(encuentro.comidas);
   const [elegidas, setElegidas] = useState<string[]>(() =>
     persona ? comidas.filter((c) => c.asistentes.includes(persona.id)).map((c) => c.id) : comidas.map((c) => c.id),
@@ -97,8 +102,8 @@ export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar
         id = nuevoId();
         e.personas.push({ id, nombre: limpio, color: COLORES_PERSONA[e.personas.length % COLORES_PERSONA.length] });
       }
-      if (esComprador) e.compradorId = id!;
-      else if (e.compradorId === id) e.compradorId = null;
+      if (esAdministrador) e.administradorId = id!;
+      else if (e.administradorId === id) e.administradorId = null;
       for (const c of e.comidas) {
         const va = elegidas.includes(c.id);
         const esta = c.asistentes.includes(id!);
@@ -108,7 +113,7 @@ export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar
     });
     if (seguir) {
       setNombre('');
-      setEsComprador(false);
+      setEsAdministrador(false);
       setAgregados((n) => n + 1);
     } else {
       onCerrar();
@@ -135,11 +140,11 @@ export function FormPersona({ persona, onCerrar }: { persona?: Persona; onCerrar
       <div className="campo" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <span className="etiqueta" style={{ margin: 0 }}>
-            Compra todo
+            Maneja la plata
           </span>
-          <div className="ayuda">Hace todas las compras: los demás le pagan a esta persona.</div>
+          <div className="ayuda">Todos arreglan cuentas con esta persona: le pagan lo que deben y ella devuelve lo que alguien puso de más.</div>
         </div>
-        <Switch checked={esComprador} onChange={setEsComprador} />
+        <Switch checked={esAdministrador} onChange={setEsAdministrador} />
       </div>
       {comidas.length > 0 && (
         <div className="campo">

@@ -8,7 +8,6 @@ import {
   House,
   Moon,
   ReceiptText,
-  ShoppingBag,
   ShoppingCart,
   Sun,
   Users,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { Compra, Persona, TipoComida } from '../lib/types';
 import { dinero, hora, iniciales } from '../lib/formato';
+import { useStore } from '../lib/store';
 
 export function AppBar({
   titulo,
@@ -325,17 +325,17 @@ export function TextoParaCopiar() {
   );
 }
 
-/** Una compra en una lista: concepto, detalle, importe y hora. */
+/** Una compra en una lista: quién la hizo, qué compró, importe y hora. */
 export function FilaCompra({ compra, onClick, sub }: { compra: Compra; onClick?: () => void; sub?: string }) {
-  const detalle = [sub, compra.observaciones].filter(Boolean).join(' · ');
+  const { encuentro } = useStore();
+  const persona = encuentro?.personas.find((p) => p.id === compra.personaId);
+  const detalle = [persona?.nombre ?? 'Persona borrada', sub].filter(Boolean).join(' · ');
   return (
     <Fila onClick={onClick}>
-      <div className="ico-compra">
-        <ShoppingBag size={17} />
-      </div>
+      <Avatar persona={persona} tam="chico" />
       <div className="cuerpo">
         <div className="titulo">{compra.concepto}</div>
-        {detalle && <div className="sub">{detalle}</div>}
+        <div className="sub">{detalle}</div>
       </div>
       <div className="monto">
         {dinero(compra.importe)}

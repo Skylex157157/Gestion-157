@@ -1,7 +1,7 @@
 import { FileDown, Info } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import {
-  compradorEfectivo,
+  administradorEfectivo,
   ordenarComidas,
   resumenCobranza,
   resumenGastosGenerales,
@@ -10,7 +10,7 @@ import {
 } from '../lib/calculos';
 import { ES_ARTIFACT } from '../lib/exportar';
 import { dinero, fechaCorta, hoyISO, NOMBRE_METODO, nombreComida, nombreComidaCorto } from '../lib/formato';
-import { GASTOS_GENERALES } from '../lib/types';
+import { GASTOS_GENERALES, type Compra } from '../lib/types';
 import { Pantalla } from '../components/ui';
 
 /** Informe completo del encuentro, pensado para imprimir o guardar como PDF. */
@@ -22,7 +22,7 @@ export default function Informe() {
   const cobranza = resumenCobranza(encuentro, personas);
   const comidas = ordenarComidas(encuentro.comidas);
   const nombre = (id: string) => encuentro.personas.find((p) => p.id === id)?.nombre ?? '?';
-  const comprador = compradorEfectivo(encuentro);
+  const administrador = administradorEfectivo(encuentro);
   const personasOrdenadas = [...personas].sort((a, b) => a.persona.nombre.localeCompare(b.persona.nombre));
 
   return (
@@ -80,7 +80,7 @@ export default function Informe() {
                 <td>{dinero(g.recaudado)}</td>
               </tr>
               <tr>
-                <td>Fondo común{comprador ? ` (lo guarda ${nombre(comprador)})` : ''}</td>
+                <td>Fondo común{administrador ? ` (lo guarda ${nombre(administrador)})` : ''}</td>
                 <td>{dinero(g.fondo)}</td>
               </tr>
               <tr>
@@ -134,7 +134,7 @@ export default function Informe() {
                   {dinero(r.comensales ? r.gastoReal / r.comensales : 0)} · Se cobra {dinero(r.cobroPorPersona)}
                   {r.esPrecioFijo ? ' (precio fijo)' : ''} · Fondo {dinero(r.fondo)}
                 </p>
-                <TablaCompras compras={compras} total={r.gastoReal} />
+                <TablaCompras compras={compras} nombre={nombre} total={r.gastoReal} />
               </div>
             );
           })}
@@ -147,6 +147,7 @@ export default function Informe() {
             No suma al fondo común
           </p>
           <TablaCompras
+            nombre={nombre}
             compras={encuentro.compras.filter((c) => c.comidaId === GASTOS_GENERALES)}
             total={gen.total}
           />
@@ -155,18 +156,19 @@ export default function Informe() {
         <section className="informe-seccion">
           <h2>Liquidación final</h2>
           <p className="informe-datos">
-            {comprador ? `Hizo todas las compras ${nombre(comprador)}; cada uno le paga a esa persona. ` : ''}
-            Total a cobrar {dinero(cobranza.totalACobrar)} · Cobrado {dinero(cobranza.cobrado)} (efectivo{' '}
-            {dinero(cobranza.efectivo)}, transferencia {dinero(cobranza.transferencia)}) · Pendiente{' '}
-            {dinero(cobranza.pendiente)} · Pagaron {cobranza.alDia} de {cobranza.deudores}
+            {administrador ? `Maneja la plata ${nombre(administrador)}: todos arreglan cuentas con esa persona. ` : ''}
+            Cada uno pone lo que le toca menos lo que gastó en compras. A cobrar {dinero(cobranza.totalACobrar)}{' '}
+            (cobrado {dinero(cobranza.cobrado)}: efectivo {dinero(cobranza.efectivo)}, transferencia{' '}
+            {dinero(cobranza.transferencia)}) · A devolver {dinero(cobranza.totalADevolver)} (devuelto{' '}
+            {dinero(cobranza.devuelto)}) · Al día {cobranza.alDia} de {cobranza.personas}
           </p>
           <div className="tabla-wrap">
             <table className="tabla informe-tabla">
               <thead>
                 <tr>
                   <th>Comensal</th>
-                  <th>Le corresponde</th>
-                  <th>Pagó</th>
+                  <th>Le toca</th>
+                  <th>Compró</th>
                   <th>Estado</th>
                 </tr>
               </thead>
@@ -175,21 +177,42 @@ export default function Informe() {
                   <tr key={p.persona.id}>
                     <td>{p.persona.nombre}</td>
                     <td>{dinero(p.aPagar)}</td>
-                    <td>{p.esComprador ? '—' : dinero(p.pagado)}</td>
-                    <td className={p.esComprador ? '' : p.pendiente > 0 ? 'negativo' : 'positivo'}>
-                      {p.esComprador
-                        ? 'Compra todo'
-                        : p.pendiente > 0
-                          ? `Debe ${dinero(p.pendiente)}`
-                          : p.pagos.length
-                            ? `Pagado (${[...new Set(p.pagos.map((x) => NOMBRE_METODO[x.metodo]))].join(' + ')})`
-                            : 'No debe'}
+                    <td>{dinero(p.compras)}</td>
+                    <td className={p.esAdministrador || p.saldo === 0 ? '' : p.saldo > 0 ? 'negativo' : 'positivo'}>
+                      {p.esAdministrador
+                        ? 'Maneja la plata'
+                        : p.saldo > 0
+                          ? `Debe ${dinero(p.saldo)}`
+                          : p.saldo < 0
+                            ? `Se le devuelven ${dinero(-p.saldo)}`
+                            : 'Al día'}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {encuentro.pagos.length > 0 && (
+            <>
+              <h3>Pagos registrados</h3>
+              <table className="tabla informe-tabla">
+                <tbody>
+                  {encuentro.pagos.map((p) => (
+                    <tr key={p.id}>
+                      <td>
+                        {p.tipo === 'pago' ? `${nombre(p.personaId)} pagó` : `Se le devolvió a ${nombre(p.personaId)}`}
+                        <span className="informe-nota">
+                          {' '}
+                          · {NOMBRE_METODO[p.metodo]} · {fechaCorta(p.fecha)}
+                        </span>
+                      </td>
+                      <td>{dinero(p.importe)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </section>
       </article>
     </Pantalla>
@@ -198,9 +221,11 @@ export default function Informe() {
 
 function TablaCompras({
   compras,
+  nombre,
   total,
 }: {
-  compras: { id: string; concepto: string; observaciones: string; importe: number }[];
+  compras: Compra[];
+  nombre: (id: string) => string;
   total: number;
 }) {
   if (compras.length === 0) return <p className="informe-nota">Sin compras.</p>;
@@ -208,24 +233,23 @@ function TablaCompras({
     <table className="tabla informe-tabla">
       <thead>
         <tr>
-          <th>Compra</th>
+          <th>Qué se compró</th>
+          <th>Quién</th>
           <th>Importe</th>
         </tr>
       </thead>
       <tbody>
         {compras.map((c) => (
           <tr key={c.id}>
-            <td>
-              {c.concepto}
-              {c.observaciones && <span className="informe-nota"> · {c.observaciones}</span>}
-            </td>
+            <td>{c.concepto}</td>
+            <td>{nombre(c.personaId)}</td>
             <td>{dinero(c.importe)}</td>
           </tr>
         ))}
       </tbody>
       <tfoot>
         <tr>
-          <td>Total</td>
+          <td colSpan={2}>Total</td>
           <td>{dinero(total)}</td>
         </tr>
       </tfoot>

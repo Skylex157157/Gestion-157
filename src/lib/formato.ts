@@ -79,7 +79,6 @@ export const CONCEPTOS = [
   'Nafta / viaje',
   'Alquiler',
   'Limpieza',
-  'Otros',
 ];
 
 export const COLORES_PERSONA = [

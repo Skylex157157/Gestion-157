@@ -45,14 +45,14 @@ const NOMBRES = [
   'Natalia Ibarra',
 ];
 
-const COMIDAS: [string, TipoComida, number, string, [string, number, string][]][] = [
-  // fecha, tipo, cantidad de comensales, menú, compras [concepto, importe, hora]
-  ['2025-04-18', 'almuerzo', 10, 'Asado', [['Carne', 40000, '11:10'], ['Verduras', 22500, '11:40']]],
-  ['2025-04-18', 'cena', 15, 'Pastas', [['Pastas', 55000, '18:30'], ['Bebidas', 35000, '19:05'], ['Postres', 15000, '20:10']]],
-  ['2025-04-19', 'desayuno', 12, 'Café con medialunas', [['Pan', 18000, '08:15'], ['Almacén', 30000, '08:40']]],
-  ['2025-04-19', 'almuerzo', 20, 'Asado', [['Carne', 70000, '11:45'], ['Bebidas', 45000, '13:20'], ['Verduras', 25000, '15:10'], ['Postres', 20000, '17:30']]],
-  ['2025-04-19', 'cena', 18, 'Pizzas', [['Pizzas', 96000, '20:00'], ['Bebidas', 50500, '20:15']]],
-  ['2025-04-20', 'almuerzo', 16, 'Asado', [['Carne', 80000, '11:30'], ['Carbón / leña', 18000, '11:35'], ['Bebidas', 30000, '12:00']]],
+const COMIDAS: [string, TipoComida, number, string, [number, string, number, string][]][] = [
+  // fecha, tipo, cantidad de comensales, menú, compras [quién, qué, importe, hora]
+  ['2025-04-18', 'almuerzo', 10, 'Asado', [[0, 'Carne y chorizos para el asado', 40000, '11:10'], [2, 'Verduras para ensalada', 22500, '11:40']]],
+  ['2025-04-18', 'cena', 15, 'Pastas', [[1, 'Fideos y salsa', 55000, '18:30'], [4, 'Bebidas (vino y gaseosas)', 35000, '19:05'], [7, 'Helado de postre', 15000, '20:10']]],
+  ['2025-04-19', 'desayuno', 12, 'Café con medialunas', [[5, 'Medialunas y pan', 18000, '08:15'], [3, 'Café, leche y azúcar', 30000, '08:40']]],
+  ['2025-04-19', 'almuerzo', 20, 'Asado', [[0, 'Carne para el asado', 70000, '11:45'], [1, 'Bebidas', 45000, '13:20'], [2, 'Verduras', 25000, '15:10'], [3, 'Flan y dulce de leche', 20000, '17:30']]],
+  ['2025-04-19', 'cena', 18, 'Pizzas', [[6, 'Pizzas', 96000, '20:00'], [8, 'Bebidas', 50500, '20:15']]],
+  ['2025-04-20', 'almuerzo', 16, 'Asado', [[9, 'Carne para el asado', 80000, '11:30'], [4, 'Carbón y leña', 18000, '11:35'], [10, 'Bebidas', 30000, '12:00']]],
 ];
 
 /** Encuentro de ejemplo para probar la app sin cargar todo a mano. */
@@ -62,18 +62,25 @@ export function encuentroEjemplo(): Encuentro {
     nombre,
     color: COLORES_PERSONA[i % COLORES_PERSONA.length],
   }));
-  const comprador = personas[0];
+  const administrador = personas[0];
 
   const comidas: Comida[] = [];
   const compras: Compra[] = [];
   COMIDAS.forEach(([fecha, tipo, cantidad, menu, lista], ci) => {
-    // Rotamos quién asiste para que cada comida tenga gente distinta; el comprador va a todas.
-    const ids = new Set<string>([comprador.id]);
-    for (let k = 0; ids.size < cantidad; k++) ids.add(personas[1 + ((ci * 5 + k) % (personas.length - 1))].id);
+    // Rotamos quién asiste para que cada comida tenga gente distinta; los que compraron siempre van.
+    const ids = new Set<string>(lista.map(([p]) => personas[p].id));
+    for (let k = 0; ids.size < cantidad; k++) ids.add(personas[(ci * 5 + k) % personas.length].id);
     const comida: Comida = { id: nuevoId(), fecha, tipo, menu, asistentes: [...ids] };
     comidas.push(comida);
-    for (const [concepto, importe, h] of lista) {
-      compras.push({ id: nuevoId(), comidaId: comida.id, concepto, importe, observaciones: '', creada: `${fecha}T${h}:00` });
+    for (const [p, concepto, importe, h] of lista) {
+      compras.push({
+        id: nuevoId(),
+        personaId: personas[p].id,
+        comidaId: comida.id,
+        concepto,
+        importe,
+        creada: `${fecha}T${h}:00`,
+      });
     }
   });
 
@@ -81,18 +88,18 @@ export function encuentroEjemplo(): Encuentro {
   compras.push(
     {
       id: nuevoId(),
+      personaId: administrador.id,
       comidaId: GASTOS_GENERALES,
-      concepto: 'Alquiler',
+      concepto: 'Alquiler de la quinta (2 noches)',
       importe: 128000,
-      observaciones: 'Quinta, 2 noches',
       creada: '2025-04-18T10:00:00',
     },
     {
       id: nuevoId(),
+      personaId: personas[2].id,
       comidaId: GASTOS_GENERALES,
-      concepto: 'Nafta / viaje',
+      concepto: 'Nafta del viaje',
       importe: 32000,
-      observaciones: '',
       creada: '2025-04-18T09:00:00',
     },
   );
@@ -103,7 +110,7 @@ export function encuentroEjemplo(): Encuentro {
     fechaInicio: '2025-04-18',
     fechaFin: '2025-04-20',
     redondeo: 1000,
-    compradorId: comprador.id,
+    administradorId: administrador.id,
     foto: null,
     personas,
     comidas,
@@ -111,17 +118,31 @@ export function encuentroEjemplo(): Encuentro {
     pagos: [],
   };
 
-  // Algunos ya pagaron, para que se vea cómo queda la cobranza
-  const pagos: Pago[] = resumenPersonas(encuentro)
-    .filter((r) => !r.esComprador)
-    .slice(0, 8)
-    .map((r, i) => ({
-      id: nuevoId(),
-      personaId: r.persona.id,
-      importe: r.aPagar,
-      fecha: '2025-04-20',
-      metodo: i % 3 === 0 ? 'efectivo' : 'transferencia',
-    }));
-  encuentro.pagos = pagos;
+  // Algunos ya arreglaron cuentas, para que se vea cómo queda la cobranza
+  const resumen = resumenPersonas(encuentro).filter((r) => !r.esAdministrador);
+  const deudores = resumen.filter((r) => r.saldo > 0).slice(3, 11);
+  const acreedores = resumen.filter((r) => r.saldo < 0).slice(0, 1);
+  encuentro.pagos = [
+    ...deudores.map(
+      (r, i): Pago => ({
+        id: nuevoId(),
+        personaId: r.persona.id,
+        tipo: 'pago',
+        importe: r.saldo,
+        fecha: '2025-04-20',
+        metodo: i % 3 === 0 ? 'efectivo' : 'transferencia',
+      }),
+    ),
+    ...acreedores.map(
+      (r): Pago => ({
+        id: nuevoId(),
+        personaId: r.persona.id,
+        tipo: 'devolucion',
+        importe: -r.saldo,
+        fecha: '2025-04-20',
+        metodo: 'transferencia',
+      }),
+    ),
+  ];
   return encuentro;
 }

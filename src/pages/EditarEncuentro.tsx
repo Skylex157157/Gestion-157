@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CalendarDays, ImagePlus, PartyPopper, Trash2 } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { dinero, fechaCorta, nombreComida } from '../lib/formato';
-import { compradorEfectivo } from '../lib/calculos';
+import { administradorEfectivo } from '../lib/calculos';
 import { Pantalla, Switch, avisar, confirmar } from '../components/ui';
 
 const REDONDEOS = [1, 100, 500, 1000, 2000, 5000];
@@ -39,7 +39,7 @@ export default function EditarEncuentro() {
   const [inicio, setInicio] = useState(encuentro.fechaInicio);
   const [fin, setFin] = useState(encuentro.fechaFin);
   const [redondeo, setRedondeo] = useState(encuentro.redondeo);
-  const [comprador, setComprador] = useState(compradorEfectivo(encuentro) ?? '');
+  const [administrador, setAdministrador] = useState(administradorEfectivo(encuentro) ?? '');
   const [cerrado, setCerrado] = useState(!!encuentro.cerrado);
 
   const fueraDeRango = encuentro.comidas.filter((c) => c.fecha < inicio || c.fecha > fin);
@@ -51,7 +51,7 @@ export default function EditarEncuentro() {
       e.fechaInicio = inicio;
       e.fechaFin = fin < inicio ? inicio : fin;
       e.redondeo = redondeo;
-      e.compradorId = comprador || null;
+      e.administradorId = administrador || null;
       e.cerrado = cerrado;
     });
     avisar('Encuentro guardado');
@@ -165,9 +165,9 @@ export default function EditarEncuentro() {
         </div>
 
         <div className="campo" style={{ marginBottom: 0 }}>
-          <label htmlFor="ee-comprador">¿Quién compra todo?</label>
+          <label htmlFor="ee-administrador">¿Quién maneja la plata?</label>
           <div className="control">
-            <select id="ee-comprador" value={comprador} onChange={(e) => setComprador(e.target.value)}>
+            <select id="ee-administrador" value={administrador} onChange={(e) => setAdministrador(e.target.value)}>
               {encuentro.personas.length === 0 && <option value="">(Todavía no hay personas)</option>}
               {encuentro.personas.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -176,7 +176,7 @@ export default function EditarEncuentro() {
               ))}
             </select>
           </div>
-          <div className="ayuda">Los demás le pagan a esta persona, y se queda con el fondo común.</div>
+          <div className="ayuda">Todos arreglan cuentas con esta persona, y guarda el fondo común.</div>
         </div>
       </div>
 

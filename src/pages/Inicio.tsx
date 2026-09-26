@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { Banknote, ImagePlus, Menu, Pencil, PiggyBank, Plus, ShoppingCart, Users, Utensils } from 'lucide-react';
+import { Banknote, ImagePlus, Menu, Pencil, PiggyBank, Plus, Users, Utensils, Wallet } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
-import { compradorEfectivo, ordenarComidas, resumenGeneral } from '../lib/calculos';
+import { administradorEfectivo, ordenarComidas, resumenGeneral } from '../lib/calculos';
 import { dinero, fechaCorta, hoyISO, nombreComida } from '../lib/formato';
 import { Fila, IconoComida, Pantalla } from '../components/ui';
 
@@ -9,7 +9,7 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
   const { encuentro } = useEncuentro();
   const navigate = useNavigate();
   const general = resumenGeneral(encuentro);
-  const comprador = encuentro.personas.find((p) => p.id === compradorEfectivo(encuentro));
+  const administrador = encuentro.personas.find((p) => p.id === administradorEfectivo(encuentro));
 
   const hoy = hoyISO();
   const ordenadas = ordenarComidas(encuentro.comidas);
@@ -56,9 +56,9 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
                 {encuentro.cerrado ? 'Cerrado' : 'Abierto'}
               </span>
             </div>
-            {comprador && (
+            {administrador && (
               <div className="fechas">
-                <ShoppingCart size={12} style={{ verticalAlign: -1 }} /> Compra todo: {comprador.nombre}
+                <Wallet size={12} style={{ verticalAlign: -1 }} /> Maneja la plata: {administrador.nombre}
               </div>
             )}
           </div>

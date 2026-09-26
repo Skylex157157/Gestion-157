@@ -24,22 +24,28 @@ export const GASTOS_GENERALES = 'generales';
 
 export type MetodoPago = 'efectivo' | 'transferencia';
 
-/** Todas las compras las hace el comprador del encuentro. */
+/** Algo que alguien compró con su plata para el grupo. */
 export interface Compra {
   id: string;
+  /** Quién hizo la compra */
+  personaId: string;
   /** Id de la comida, o GASTOS_GENERALES */
   comidaId: string;
+  /** Qué compró (ej.: "Carne y chorizos para el asado") */
   concepto: string;
   importe: number;
-  observaciones: string;
   /** ISO timestamp de cuándo se registró */
   creada: string;
 }
 
-/** Lo que una persona le pagó al comprador. */
+/**
+ * Plata que se movió entre una persona y quien maneja la plata:
+ * "pago" = la persona le pagó lo que debía; "devolucion" = se le devolvió lo que puso de más.
+ */
 export interface Pago {
   id: string;
   personaId: string;
+  tipo: 'pago' | 'devolucion';
   importe: number;
   fecha: string;
   metodo: MetodoPago;
@@ -52,8 +58,8 @@ export interface Encuentro {
   fechaFin: string;
   /** El cobro por persona se redondea hacia arriba a este múltiplo */
   redondeo: number;
-  /** La persona que compra todo: los demás le pagan a ella, y se queda con el fondo común */
-  compradorId: string | null;
+  /** Quien maneja la plata: todos arreglan cuentas con esta persona, y guarda el fondo común */
+  administradorId: string | null;
   /** Encuentro cerrado para liquidar. No bloquea los cambios. */
   cerrado?: boolean;
   /** Foto de portada como data URL (opcional) */

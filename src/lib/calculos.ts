@@ -17,21 +17,31 @@ export interface ResumenComida {
 
 export interface ResumenPersona {
   persona: Persona;
-  /** Es quien compra todo: no le debe a nadie */
-  esComprador: boolean;
+  /** Es quien maneja la plata: los demás arreglan cuentas con esta persona */
+  esAdministrador: boolean;
   comidas: number;
   /** Suma del costo real exacto de sus comidas y su parte de gastos generales */
   costoReal: number;
-  /** Lo que le corresponde pagar (comidas redondeadas + gastos generales) */
+  /** Lo que le corresponde poner (comidas redondeadas + gastos generales) */
   aPagar: number;
+  /** Lo que gastó en compras para el grupo */
+  compras: number;
+  /** aPagar - compras: positivo = tiene que poner esa diferencia; negativo = se le devuelve */
+  neto: number;
   /** Su parte de los gastos generales */
   generales: number;
   /** Aporte al fondo común por el redondeo */
   fondoGenerado: number;
   pagos: Pago[];
+  /** Lo que ya le pagó a quien maneja la plata */
   pagado: number;
-  /** Lo que todavía le debe al comprador (0 para el comprador) */
-  pendiente: number;
+  /** Lo que ya se le devolvió */
+  devuelto: number;
+  /**
+   * Lo que falta arreglar con quien maneja la plata (0 para esa persona):
+   * positivo = todavía debe; negativo = todavía hay que devolverle.
+   */
+  saldo: number;
 }
 
 export interface ResumenGastosGenerales {
@@ -55,16 +65,21 @@ export interface ResumenGeneral {
 }
 
 export interface ResumenCobranza {
-  compradorId: string | null;
-  /** Lo que los demás le tienen que pagar al comprador en total */
+  administradorId: string | null;
+  /** Lo que hay que cobrarles a los que deben, en total */
   totalACobrar: number;
+  /** Lo que hay que devolverles a los que pusieron de más, en total */
+  totalADevolver: number;
   cobrado: number;
+  devuelto: number;
+  /** Cobrado en efectivo / por transferencia */
   efectivo: number;
   transferencia: number;
-  pendiente: number;
-  /** Personas (sin contar al comprador) que ya no deben nada */
+  pendienteCobrar: number;
+  pendienteDevolver: number;
+  /** Personas (sin contar a quien maneja la plata) que ya están al día */
   alDia: number;
-  deudores: number;
+  personas: number;
 }
 
 /** Redondea hacia arriba al múltiplo indicado (mínimo 1 peso). */
@@ -134,7 +149,7 @@ export function resumenGeneral(enc: Encuentro): ResumenGeneral {
 export function resumenPersonas(enc: Encuentro): ResumenPersona[] {
   const general = resumenGeneral(enc);
   const { reparto } = resumenGastosGenerales(enc);
-  const compradorId = compradorEfectivo(enc);
+  const administradorId = administradorEfectivo(enc);
 
   return enc.personas.map((persona) => {
     let comidas = 0;
@@ -150,44 +165,54 @@ export function resumenPersonas(enc: Encuentro): ResumenPersona[] {
     const generales = reparto.get(persona.id) ?? 0;
     costoReal += generales;
     aPagar += generales;
-    const esComprador = persona.id === compradorId;
+    const compras = enc.compras.filter((c) => c.personaId === persona.id).reduce((s, c) => s + c.importe, 0);
+    const neto = aPagar - compras;
+    const esAdministrador = persona.id === administradorId;
     const pagos = enc.pagos.filter((p) => p.personaId === persona.id);
-    const pagado = pagos.reduce((s, p) => s + p.importe, 0);
+    const pagado = pagos.filter((p) => p.tipo === 'pago').reduce((s, p) => s + p.importe, 0);
+    const devuelto = pagos.filter((p) => p.tipo === 'devolucion').reduce((s, p) => s + p.importe, 0);
 
     return {
       persona,
-      esComprador,
+      esAdministrador,
       comidas,
       costoReal,
       aPagar,
+      compras,
+      neto,
       generales,
       fondoGenerado: aPagar - costoReal,
       pagos,
       pagado,
-      pendiente: esComprador ? 0 : Math.max(0, aPagar - pagado),
+      devuelto,
+      saldo: esAdministrador ? 0 : neto - pagado + devuelto,
     };
   });
 }
 
 export function resumenCobranza(enc: Encuentro, personas = resumenPersonas(enc)): ResumenCobranza {
-  const deudores = personas.filter((p) => !p.esComprador);
-  const pagos = enc.pagos.filter((p) => deudores.some((d) => d.persona.id === p.personaId));
+  const otros = personas.filter((p) => !p.esAdministrador);
+  const pagos = otros.flatMap((p) => p.pagos);
   const suma = (lista: Pago[]) => lista.reduce((s, p) => s + p.importe, 0);
+  const cobros = pagos.filter((p) => p.tipo === 'pago');
   return {
-    compradorId: compradorEfectivo(enc),
-    totalACobrar: deudores.reduce((s, p) => s + p.aPagar, 0),
-    cobrado: suma(pagos),
-    efectivo: suma(pagos.filter((p) => p.metodo === 'efectivo')),
-    transferencia: suma(pagos.filter((p) => p.metodo === 'transferencia')),
-    pendiente: deudores.reduce((s, p) => s + p.pendiente, 0),
-    alDia: deudores.filter((p) => p.pendiente === 0).length,
-    deudores: deudores.length,
+    administradorId: administradorEfectivo(enc),
+    totalACobrar: otros.reduce((s, p) => s + Math.max(0, p.neto), 0),
+    totalADevolver: otros.reduce((s, p) => s + Math.max(0, -p.neto), 0),
+    cobrado: suma(cobros),
+    devuelto: suma(pagos.filter((p) => p.tipo === 'devolucion')),
+    efectivo: suma(cobros.filter((p) => p.metodo === 'efectivo')),
+    transferencia: suma(cobros.filter((p) => p.metodo === 'transferencia')),
+    pendienteCobrar: otros.reduce((s, p) => s + Math.max(0, p.saldo), 0),
+    pendienteDevolver: otros.reduce((s, p) => s + Math.max(0, -p.saldo), 0),
+    alDia: otros.filter((p) => p.saldo === 0).length,
+    personas: otros.length,
   };
 }
 
-/** El comprador elegido, o la primera persona si no se eligió ninguno. */
-export function compradorEfectivo(enc: Encuentro): string | null {
-  if (enc.compradorId && enc.personas.some((p) => p.id === enc.compradorId)) return enc.compradorId;
+/** Quien maneja la plata, o la primera persona si no se eligió a nadie. */
+export function administradorEfectivo(enc: Encuentro): string | null {
+  if (enc.administradorId && enc.personas.some((p) => p.id === enc.administradorId)) return enc.administradorId;
   return enc.personas[0]?.id ?? null;
 }
 

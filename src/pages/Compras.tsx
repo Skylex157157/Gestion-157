@@ -16,7 +16,7 @@ export default function Compras() {
   const coincide = (c: (typeof encuentro.compras)[number]) =>
     !texto ||
     c.concepto.toLowerCase().includes(texto) ||
-    c.observaciones.toLowerCase().includes(texto);
+    (encuentro.personas.find((p) => p.id === c.personaId)?.nombre.toLowerCase().includes(texto) ?? false);
 
   const deLa = (comidaId: string) =>
     encuentro.compras.filter((c) => c.comidaId === comidaId && coincide(c)).sort((a, b) => a.creada.localeCompare(b.creada));
@@ -43,7 +43,7 @@ export default function Compras() {
       <label className="buscador">
         <Search size={18} />
         <input
-          placeholder="Buscar compra..."
+          placeholder="Buscar por persona o qué compró..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
