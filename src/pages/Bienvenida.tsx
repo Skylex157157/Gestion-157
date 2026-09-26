@@ -1,12 +1,13 @@
 import { useRef } from 'react';
-import { Users } from 'lucide-react';
+import { Archive, Users } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { encuentroEjemplo } from '../lib/ejemplo';
 import { leerCopia } from '../lib/exportar';
 import { avisar } from '../components/ui';
 
-export default function Bienvenida({ onNuevo }: { onNuevo: () => void }) {
-  const { agregarEncuentro, reemplazarTodo } = useStore();
+export default function Bienvenida({ onNuevo, onArchivados }: { onNuevo: () => void; onArchivados: () => void }) {
+  const { estado, agregarEncuentro, reemplazarTodo } = useStore();
+  const archivados = estado.encuentros.filter((e) => e.archivado).length;
   const archivo = useRef<HTMLInputElement>(null);
 
   return (
@@ -20,8 +21,13 @@ export default function Bienvenida({ onNuevo }: { onNuevo: () => void }) {
         las cuentas con quien maneja la plata.
       </p>
       <button className="btn" onClick={onNuevo}>
-        Crear mi primer encuentro
+        {archivados ? 'Crear un encuentro nuevo' : 'Crear mi primer encuentro'}
       </button>
+      {archivados > 0 && (
+        <button className="btn borde" onClick={onArchivados}>
+          <Archive size={18} /> Ver encuentros archivados ({archivados})
+        </button>
+      )}
       <button className="btn borde" onClick={() => agregarEncuentro(encuentroEjemplo())}>
         Ver un ejemplo
       </button>

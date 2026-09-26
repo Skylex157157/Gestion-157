@@ -75,6 +75,12 @@ export function encuentroNuevo(nombre: string, fechaInicio: string, fechaFin: st
   };
 }
 
+/** El encuentro abierto: el elegido, o si no hay, el primero sin archivar. */
+function idActivo(e: Estado): string | null {
+  if (e.encuentroActivoId && e.encuentros.some((x) => x.id === e.encuentroActivoId)) return e.encuentroActivoId;
+  return e.encuentros.find((x) => !x.archivado)?.id ?? null;
+}
+
 interface Contexto {
   estado: Estado;
   encuentro: Encuentro | null;
@@ -82,6 +88,8 @@ interface Contexto {
   actualizar: (cambio: (e: Encuentro) => void) => void;
   agregarEncuentro: (e: Encuentro) => void;
   eliminarEncuentro: (id: string) => void;
+  /** Archiva (oculta de la lista) o desarchiva un encuentro. Si se archiva el abierto, se cierra. */
+  archivarEncuentro: (id: string, archivar: boolean) => void;
   activar: (id: string) => void;
   reemplazarTodo: (e: Estado) => void;
   errorGuardado: string | null;
@@ -104,13 +112,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [estado]);
 
-  const encuentro =
-    estado.encuentros.find((e) => e.id === estado.encuentroActivoId) ?? estado.encuentros[0] ?? null;
+  const encuentro = estado.encuentros.find((e) => e.id === idActivo(estado)) ?? null;
 
   const actualizar = useCallback(
     (cambio: (e: Encuentro) => void) => {
       setEstado((prev) => {
-        const activoId = prev.encuentroActivoId ?? prev.encuentros[0]?.id;
+        const activoId = idActivo(prev);
         return {
           ...prev,
           encuentros: prev.encuentros.map((e) => {
@@ -130,14 +137,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const eliminarEncuentro = useCallback((id: string) => {
-    setEstado((prev) => {
-      const encuentros = prev.encuentros.filter((e) => e.id !== id);
-      return {
-        ...prev,
-        encuentros,
-        encuentroActivoId: prev.encuentroActivoId === id ? (encuentros[0]?.id ?? null) : prev.encuentroActivoId,
-      };
-    });
+    setEstado((prev) => ({
+      ...prev,
+      encuentros: prev.encuentros.filter((e) => e.id !== id),
+      encuentroActivoId: prev.encuentroActivoId === id ? null : prev.encuentroActivoId,
+    }));
+  }, []);
+
+  const archivarEncuentro = useCallback((id: string, archivar: boolean) => {
+    setEstado((prev) => ({
+      ...prev,
+      encuentros: prev.encuentros.map((e) => (e.id === id ? { ...e, archivado: archivar } : e)),
+      encuentroActivoId: archivar && idActivo(prev) === id ? null : prev.encuentroActivoId,
+    }));
   }, []);
 
   const activar = useCallback((id: string) => {
@@ -148,7 +160,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreContext.Provider
-      value={{ estado, encuentro, actualizar, agregarEncuentro, eliminarEncuentro, activar, reemplazarTodo, errorGuardado }}
+      value={{
+        estado,
+        encuentro,
+        actualizar,
+        agregarEncuentro,
+        eliminarEncuentro,
+        archivarEncuentro,
+        activar,
+        reemplazarTodo,
+        errorGuardado,
+      }}
     >
       {children}
     </StoreContext.Provider>

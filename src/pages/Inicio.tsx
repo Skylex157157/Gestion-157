@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { Banknote, ImagePlus, Menu, Pencil, PiggyBank, Plus, Users, Utensils, Wallet } from 'lucide-react';
+import { Archive, Banknote, ImagePlus, Menu, Pencil, PiggyBank, Plus, Users, Utensils, Wallet } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { administradorEfectivo, ordenarComidas, resumenGeneral } from '../lib/calculos';
 import { dinero, fechaCorta, hoyISO, nombreComida } from '../lib/formato';
-import { Fila, IconoComida, Pantalla } from '../components/ui';
+import { Fila, IconoComida, Pantalla, avisar } from '../components/ui';
 
 export default function Inicio({ onMenu }: { onMenu: () => void }) {
-  const { encuentro } = useEncuentro();
+  const { encuentro, archivarEncuentro } = useEncuentro();
   const navigate = useNavigate();
   const general = resumenGeneral(encuentro);
   const administrador = encuentro.personas.find((p) => p.id === administradorEfectivo(encuentro));
@@ -39,6 +39,21 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
 
   return (
     <Pantalla cabecera={cabecera}>
+      {encuentro.archivado && (
+        <div className="aviso" style={{ alignItems: 'center' }}>
+          <Archive size={20} />
+          <span style={{ flex: 1 }}>Este encuentro está archivado.</span>
+          <button
+            className="btn chico borde"
+            onClick={() => {
+              archivarEncuentro(encuentro.id, false);
+              avisar(`"${encuentro.nombre}" volvió a tus encuentros`);
+            }}
+          >
+            Desarchivar
+          </button>
+        </div>
+      )}
       <div className="card portada">
         <div
           className={`imagen ${encuentro.foto ? '' : 'vacia'}`}

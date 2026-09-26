@@ -62,6 +62,8 @@ export interface Encuentro {
   administradorId: string | null;
   /** Encuentro cerrado para liquidar. No bloquea los cambios. */
   cerrado?: boolean;
+  /** Archivado: ya terminó y no aparece en la lista de encuentros (se puede recuperar) */
+  archivado?: boolean;
   /** Foto de portada como data URL (opcional) */
   foto: string | null;
   personas: Persona[];

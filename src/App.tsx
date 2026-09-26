@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useStore } from './lib/store';
 import { MenuLateral } from './components/Menu';
 import { NuevoEncuentro } from './components/NuevoEncuentro';
+import { GestionEncuentros } from './components/GestionEncuentros';
 import { Confirmaciones, TextoParaCopiar, Toasts } from './components/ui';
 import Bienvenida from './pages/Bienvenida';
 import Inicio from './pages/Inicio';
@@ -25,6 +26,7 @@ export default function App() {
   const { encuentro, errorGuardado } = useStore();
   const [menu, setMenu] = useState(false);
   const [nuevo, setNuevo] = useState(false);
+  const [gestion, setGestion] = useState<'activos' | 'archivados' | null>(null);
 
   return (
     <div className="app">
@@ -54,9 +56,12 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       ) : (
-        <Bienvenida onNuevo={() => setNuevo(true)} />
+        <Bienvenida onNuevo={() => setNuevo(true)} onArchivados={() => setGestion('archivados')} />
       )}
-      {menu && <MenuLateral onCerrar={() => setMenu(false)} onNuevo={() => setNuevo(true)} />}
+      {menu && (
+        <MenuLateral onCerrar={() => setMenu(false)} onNuevo={() => setNuevo(true)} onGestionar={setGestion} />
+      )}
+      {gestion && <GestionEncuentros inicial={gestion} onCerrar={() => setGestion(null)} />}
       {nuevo && <NuevoEncuentro onCerrar={() => setNuevo(false)} />}
       <Confirmaciones />
       <TextoParaCopiar />

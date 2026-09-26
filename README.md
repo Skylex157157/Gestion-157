@@ -6,6 +6,8 @@ cada comida, cuánto le toca poner a cada uno y cómo quedan las cuentas con qui
 ## Cómo funciona
 
 - **Encuentros**: podés tener varios ("Fin de semana en familia", "Navidad"…). Se cambian desde el menú ☰.
+  Cuando uno termina se puede **archivar** (sale de la lista pero se puede abrir o recuperar desde "Archivados")
+  o **borrar** para siempre, desde ☰ → "Archivar o borrar encuentros".
 - **Quién maneja la plata**: en cada encuentro se elige una persona. Todos arreglan cuentas solo con ella, y
   guarda el fondo común.
 - **Comidas**: cada desayuno / almuerzo / merienda / cena, con menú y la lista de quiénes comieron

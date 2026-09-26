@@ -1,10 +1,13 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Archive,
+  ArchiveRestore,
   CalendarDays,
   Check,
   Download,
   FileText,
+  FolderCog,
   Lock,
   LockOpen,
   Pencil,
@@ -34,10 +37,20 @@ export async function compartirResumen(encuentro: Encuentro) {
   if (r === 'error') mostrarTexto('Resumen para WhatsApp', texto);
 }
 
-export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNuevo: () => void }) {
-  const { estado, encuentro, activar, reemplazarTodo, actualizar } = useStore();
+export function MenuLateral({
+  onCerrar,
+  onNuevo,
+  onGestionar,
+}: {
+  onCerrar: () => void;
+  onNuevo: () => void;
+  onGestionar: (tab: 'activos' | 'archivados') => void;
+}) {
+  const { estado, encuentro, activar, reemplazarTodo, actualizar, archivarEncuentro } = useStore();
   const [busqueda, setBusqueda] = useState('');
-  const encuentros = estado.encuentros.filter((e) =>
+  const activos = estado.encuentros.filter((e) => !e.archivado);
+  const archivados = estado.encuentros.length - activos.length;
+  const encuentros = activos.filter((e) =>
     e.nombre.toLowerCase().includes(busqueda.trim().toLowerCase()),
   );
   const navigate = useNavigate();
@@ -90,7 +103,7 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
           </div>
 
           <div className="menu-etq">Mis encuentros</div>
-          {estado.encuentros.length > 4 && (
+          {activos.length > 4 && (
             <label className="buscador" style={{ margin: '4px 16px 6px' }}>
               <Search size={16} />
               <input
@@ -131,6 +144,26 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
           >
             <Plus size={20} /> Nuevo encuentro
           </button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              onCerrar();
+              onGestionar('activos');
+            }}
+          >
+            <FolderCog size={20} /> Archivar o borrar encuentros
+          </button>
+          {archivados > 0 && (
+            <button
+              className="menu-item"
+              onClick={() => {
+                onCerrar();
+                onGestionar('archivados');
+              }}
+            >
+              <Archive size={20} /> Archivados ({archivados})
+            </button>
+          )}
 
           {encuentro && (
             <>
@@ -155,6 +188,21 @@ export function MenuLateral({ onCerrar, onNuevo }: { onCerrar: () => void; onNue
               >
                 {encuentro.cerrado ? <LockOpen size={20} /> : <Lock size={20} />}
                 {encuentro.cerrado ? 'Reabrir encuentro' : 'Cerrar encuentro'}
+              </button>
+              <button
+                className="menu-item"
+                onClick={() => {
+                  archivarEncuentro(encuentro.id, !encuentro.archivado);
+                  avisar(
+                    encuentro.archivado
+                      ? `"${encuentro.nombre}" volvió a tus encuentros`
+                      : `"${encuentro.nombre}" se archivó. Lo encontrás en Archivados.`,
+                  );
+                  onCerrar();
+                }}
+              >
+                {encuentro.archivado ? <ArchiveRestore size={20} /> : <Archive size={20} />}
+                {encuentro.archivado ? 'Desarchivar este encuentro' : 'Archivar este encuentro'}
               </button>
             </>
           )}
