@@ -23,6 +23,11 @@ export function fechaCorta(iso: string): string {
   return `${DIAS_CORTOS[f.getDay()]} ${String(f.getDate()).padStart(2, '0')}/${String(f.getMonth() + 1).padStart(2, '0')}`;
 }
 
+/** "Sábado" */
+export function nombreDia(iso: string): string {
+  return iso ? DIAS_LARGOS[aFecha(iso).getDay()] : '';
+}
+
 /** "Sábado 19/04" */
 export function fechaLarga(iso: string): string {
   if (!iso) return '';

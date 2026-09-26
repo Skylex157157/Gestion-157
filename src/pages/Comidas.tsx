@@ -3,7 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Banknote, ChefHat, ChevronRight, Plus, Utensils } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenGeneral } from '../lib/calculos';
-import { dinero, NOMBRE_TIPO, nombreComida, nuevoId, parsearImporte, TIPOS_COMIDA } from '../lib/formato';
+import {
+  dinero,
+  fechaCorta,
+  NOMBRE_TIPO,
+  nombreComida,
+  nombreDia,
+  nuevoId,
+  parsearImporte,
+  TIPOS_COMIDA,
+} from '../lib/formato';
 import type { Comida, TipoComida } from '../lib/types';
 import { Hoja, IconoComida, Pantalla, Switch, Vacio } from '../components/ui';
 
@@ -83,6 +92,8 @@ export function FormComida({
   const [precio, setPrecio] = useState(comida?.precioFijo ? String(comida.precioFijo) : '');
   const precioFijo = conPrecioFijo ? parsearImporte(precio) : 0;
   const dias = diasEntre(encuentro.fechaInicio, encuentro.fechaFin);
+  // Si la comida quedó fuera de las fechas del encuentro, igual se muestra su día
+  const opcionesDia = fecha && !dias.includes(fecha) ? [...dias, fecha].sort() : dias;
 
   const repetida = encuentro.comidas.some((c) => c.fecha === fecha && c.tipo === tipo && c.id !== comida?.id);
 
@@ -115,15 +126,30 @@ export function FormComida({
   return (
     <Hoja titulo={comida ? 'Editar comida' : 'Agregar comida'} onCerrar={onCerrar}>
       <div className="campo">
-        <label htmlFor="fc-fecha">Día</label>
-        <div className="control">
-          <input id="fc-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} list="fc-dias" />
-          <datalist id="fc-dias">
-            {dias.map((d) => (
-              <option key={d} value={d} />
+        <span className="etiqueta">Día</span>
+        {opcionesDia.length > 0 ? (
+          <div className="dias" role="radiogroup" aria-label="Día">
+            {opcionesDia.map((d) => (
+              <button
+                key={d}
+                role="radio"
+                aria-checked={d === fecha}
+                className={`dia ${d === fecha ? 'activo' : ''}`}
+                onClick={() => setFecha(d)}
+              >
+                <span className="dia-nombre">{nombreDia(d)}</span>
+                <span className="dia-fecha">{fechaCorta(d).split(' ')[1]}</span>
+              </button>
             ))}
-          </datalist>
-        </div>
+          </div>
+        ) : (
+          <div className="control">
+            <input id="fc-fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          </div>
+        )}
+        {opcionesDia.length > 0 && (
+          <div className="ayuda">Para usar otros días, cambiá las fechas del encuentro.</div>
+        )}
       </div>
       <div className="campo">
         <span className="etiqueta">Comida</span>

@@ -1301,3 +1301,42 @@ table.tabla {
     margin: 16mm;
   }
 }
+
+/* ---------- Selector de día ---------- */
+
+.dias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 9px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--borde);
+  background: #fff;
+}
+
+.dia-nombre {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.dia-fecha {
+  font-size: 11.5px;
+  color: var(--texto-3);
+}
+
+.dia.activo {
+  background: var(--verde-700);
+  border-color: var(--verde-700);
+  color: #fff;
+}
+
+.dia.activo .dia-fecha {
+  color: rgba(255, 255, 255, 0.8);
+}
