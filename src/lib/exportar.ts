@@ -31,10 +31,9 @@ export function textoResumen(enc: Encuentro): string {
   lineas.push('');
   lineas.push(administrador ? `*Cuentas con ${administrador}* (maneja la plata)` : '*Cuentas*');
   for (const p of [...personas].sort((a, b) => a.persona.nombre.localeCompare(b.persona.nombre))) {
-    if (p.esAdministrador) continue;
     const estado =
       p.saldo > 0 ? `debe ${dinero(p.saldo)}` : p.saldo < 0 ? `se le devuelven ${dinero(-p.saldo)}` : 'al día ✅';
-    lineas.push(`• ${p.persona.nombre}: ${estado}`);
+    lineas.push(`• ${p.persona.nombre}${p.esAdministrador ? ' (maneja la plata)' : ''}: ${estado}`);
   }
   return lineas.join('\n');
 }

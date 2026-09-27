@@ -105,16 +105,14 @@ export default function LiquidacionPersona() {
             />
           </div>
 
-          {r.esAdministrador ? (
-            <ResumenAdministrador cobranza={cobranza} fondo={resumenGeneral(encuentro).fondo} neto={r.neto} />
-          ) : (
-            <EstadoCuenta
-              r={r}
-              administrador={administrador?.nombre}
-              onArreglar={() => setArreglando(true)}
-              onDeshacer={() => deshacer(persona)}
-            />
-          )}
+          <EstadoCuenta
+            r={r}
+            administrador={administrador?.nombre}
+            onArreglar={() => setArreglando(true)}
+            onDeshacer={() => deshacer(persona)}
+          />
+
+          {r.esAdministrador && <ResumenAdministrador cobranza={cobranza} fondo={resumenGeneral(encuentro).fondo} />}
 
           <div
             className="card card-pad"
@@ -235,7 +233,13 @@ function EstadoCuenta({
           <div>
             <div style={{ fontWeight: 700, color }}>{debe ? 'Debe pagar' : 'Se le devuelve'}</div>
             <div className="ayuda" style={{ marginTop: 1, color: 'var(--texto-2)' }}>
-              {debe ? `A ${quien}` : `Se lo devuelve ${quien}`}
+              {r.esAdministrador
+                ? debe
+                  ? 'Lo pone en la caja que maneja'
+                  : 'Lo saca de la caja que maneja'
+                : debe
+                  ? `A ${quien}`
+                  : `Se lo devuelve ${quien}`}
               {r.pagado > 0 && ` · ya pagó ${dinero(r.pagado)}`}
               {r.devuelto > 0 && ` · ya se le devolvieron ${dinero(r.devuelto)}`}
             </div>
@@ -266,7 +270,7 @@ function EstadoCuenta({
   );
 }
 
-function ResumenAdministrador({ cobranza, fondo, neto }: { cobranza: ResumenCobranza; fondo: number; neto: number }) {
+function ResumenAdministrador({ cobranza, fondo }: { cobranza: ResumenCobranza; fondo: number }) {
   const navigate = useNavigate();
   return (
     <>
@@ -284,8 +288,7 @@ function ResumenAdministrador({ cobranza, fondo, neto }: { cobranza: ResumenCobr
         <KV k="Fondo común que guarda" v={dinero(fondo)} />
       </div>
       <p className="ayuda" style={{ margin: '-4px 4px 12px' }}>
-        Su propia cuenta {neto >= 0 ? `(${dinero(neto)} a poner)` : `(puso ${dinero(-neto)} de más)`} no figura en la
-        cobranza, porque la plata la maneja esta misma persona.
+        Incluye su propia cuenta, igual que la de todos.
       </p>
       <button className="btn" onClick={() => navigate('/resumen/cobranza')}>
         Ver cobranza

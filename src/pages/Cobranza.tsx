@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowDownLeft, ArrowUpRight, Banknote, Check, CircleCheck, Landmark, Undo2, UserCheck } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Banknote, Check, CircleCheck, Landmark, Undo2, UserCheck, Wallet } from 'lucide-react';
 import { useEncuentro } from '../lib/store';
 import { resumenCobranza, resumenPersonas, type ResumenPersona } from '../lib/calculos';
 import { dinero, fechaCorta, NOMBRE_METODO } from '../lib/formato';
@@ -19,11 +19,10 @@ export default function Cobranza() {
   const personas = resumenPersonas(encuentro).sort((a, b) => a.persona.nombre.localeCompare(b.persona.nombre));
   const c = resumenCobranza(encuentro, personas);
   const administrador = encuentro.personas.find((p) => p.id === c.administradorId);
-  const otros = personas.filter((p) => !p.esAdministrador);
   const listas: Record<Pestana, ResumenPersona[]> = {
-    deben: otros.filter((p) => p.saldo > 0),
-    devolver: otros.filter((p) => p.saldo < 0),
-    alDia: otros.filter((p) => p.saldo === 0),
+    deben: personas.filter((p) => p.saldo > 0),
+    devolver: personas.filter((p) => p.saldo < 0),
+    alDia: personas.filter((p) => p.saldo === 0),
   };
   const lista = listas[tab];
 
@@ -109,7 +108,10 @@ export default function Cobranza() {
               <button className="fila-link" onClick={() => navigate(`/personas/${p.persona.id}`)}>
                 <Avatar persona={p.persona} tam="chico" />
                 <div className="cuerpo">
-                  <div className="titulo">{p.persona.nombre}</div>
+                  <div className="titulo">
+                    {p.persona.nombre}
+                    {p.esAdministrador && <Wallet size={13} className="icono-admin" aria-label="Maneja la plata" />}
+                  </div>
                   <div className="sub">
                     {tab === 'alDia'
                       ? ultimo

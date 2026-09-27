@@ -40,13 +40,17 @@ export default function Personas() {
             <Avatar persona={r.persona} />
             <div className="cuerpo">
               <div className="titulo">{r.persona.nombre}</div>
-              <div className="sub">Comidas: {r.comidas}</div>
+              <div className="sub">
+                Comidas: {r.comidas}
+                {r.esAdministrador && (
+                  <>
+                    {' · '}
+                    <Wallet size={12} style={{ verticalAlign: -1 }} /> Maneja la plata
+                  </>
+                )}
+              </div>
             </div>
-            {r.esAdministrador ? (
-              <span className="chip">
-                <Wallet size={12} style={{ verticalAlign: -1 }} /> Maneja la plata
-              </span>
-            ) : r.saldo === 0 ? (
+            {r.saldo === 0 ? (
               <CircleCheck size={22} className="positivo" aria-label="Al día" />
             ) : r.saldo > 0 ? (
               <div className="monto negativo">

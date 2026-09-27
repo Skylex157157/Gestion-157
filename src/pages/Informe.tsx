@@ -175,13 +175,14 @@ export default function Informe() {
               <tbody>
                 {personasOrdenadas.map((p) => (
                   <tr key={p.persona.id}>
-                    <td>{p.persona.nombre}</td>
+                    <td>
+                      {p.persona.nombre}
+                      {p.esAdministrador && <span className="informe-nota"> (maneja la plata)</span>}
+                    </td>
                     <td>{dinero(p.aPagar)}</td>
                     <td>{dinero(p.compras)}</td>
-                    <td className={p.esAdministrador || p.saldo === 0 ? '' : p.saldo > 0 ? 'negativo' : 'positivo'}>
-                      {p.esAdministrador
-                        ? 'Maneja la plata'
-                        : p.saldo > 0
+                    <td className={p.saldo === 0 ? '' : p.saldo > 0 ? 'negativo' : 'positivo'}>
+                      {p.saldo > 0
                           ? `Debe ${dinero(p.saldo)}`
                           : p.saldo < 0
                             ? `Se le devuelven ${dinero(-p.saldo)}`

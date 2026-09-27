@@ -1376,3 +1376,9 @@ table.tabla {
 .sugerencia:active {
   background: var(--verde-100);
 }
+
+.icono-admin {
+  margin-left: 5px;
+  vertical-align: -1px;
+  color: var(--verde-600);
+}

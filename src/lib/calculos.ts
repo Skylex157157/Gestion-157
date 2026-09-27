@@ -185,28 +185,27 @@ export function resumenPersonas(enc: Encuentro): ResumenPersona[] {
       pagos,
       pagado,
       devuelto,
-      saldo: esAdministrador ? 0 : neto - pagado + devuelto,
+      saldo: neto - pagado + devuelto,
     };
   });
 }
 
 export function resumenCobranza(enc: Encuentro, personas = resumenPersonas(enc)): ResumenCobranza {
-  const otros = personas.filter((p) => !p.esAdministrador);
-  const pagos = otros.flatMap((p) => p.pagos);
+  const pagos = personas.flatMap((p) => p.pagos);
   const suma = (lista: Pago[]) => lista.reduce((s, p) => s + p.importe, 0);
   const cobros = pagos.filter((p) => p.tipo === 'pago');
   return {
     administradorId: administradorEfectivo(enc),
-    totalACobrar: otros.reduce((s, p) => s + Math.max(0, p.neto), 0),
-    totalADevolver: otros.reduce((s, p) => s + Math.max(0, -p.neto), 0),
+    totalACobrar: personas.reduce((s, p) => s + Math.max(0, p.neto), 0),
+    totalADevolver: personas.reduce((s, p) => s + Math.max(0, -p.neto), 0),
     cobrado: suma(cobros),
     devuelto: suma(pagos.filter((p) => p.tipo === 'devolucion')),
     efectivo: suma(cobros.filter((p) => p.metodo === 'efectivo')),
     transferencia: suma(cobros.filter((p) => p.metodo === 'transferencia')),
-    pendienteCobrar: otros.reduce((s, p) => s + Math.max(0, p.saldo), 0),
-    pendienteDevolver: otros.reduce((s, p) => s + Math.max(0, -p.saldo), 0),
-    alDia: otros.filter((p) => p.saldo === 0).length,
-    personas: otros.length,
+    pendienteCobrar: personas.reduce((s, p) => s + Math.max(0, p.saldo), 0),
+    pendienteDevolver: personas.reduce((s, p) => s + Math.max(0, -p.saldo), 0),
+    alDia: personas.filter((p) => p.saldo === 0).length,
+    personas: personas.length,
   };
 }
 

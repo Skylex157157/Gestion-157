@@ -118,7 +118,7 @@ export function encuentroEjemplo(): Encuentro {
     pagos: [],
   };
 
-  // Algunos ya arreglaron cuentas, para que se vea cómo queda la cobranza
+  // Algunos ya arreglaron cuentas, para que se vea cómo queda la cobranza (quien maneja la plata queda pendiente)
   const resumen = resumenPersonas(encuentro).filter((r) => !r.esAdministrador);
   const deudores = resumen.filter((r) => r.saldo > 0).slice(3, 11);
   const acreedores = resumen.filter((r) => r.saldo < 0).slice(0, 1);

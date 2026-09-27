@@ -90,9 +90,11 @@ describe('resumenPersonas', () => {
     expect(de(enc, 'caro').saldo).toBe(22000 - 5000);
   });
 
-  it('quien maneja la plata no le debe a nadie', () => {
+  it('quien maneja la plata también tiene su cuenta, como todos', () => {
     const enc = base();
     expect(de(enc, 'ana').esAdministrador).toBe(true);
+    expect(de(enc, 'ana').saldo).toBe(10000);
+    enc.pagos.push({ id: 'p', personaId: 'ana', tipo: 'pago', importe: 10000, fecha: '', metodo: 'efectivo' });
     expect(de(enc, 'ana').saldo).toBe(0);
   });
 
@@ -134,14 +136,15 @@ describe('resumenCobranza', () => {
     const enc = base();
     enc.pagos.push({ id: 'p1', personaId: 'caro', tipo: 'pago', importe: 4000, fecha: '', metodo: 'transferencia' });
     const c = resumenCobranza(enc);
-    expect(c.totalACobrar).toBe(10000);
+    // Ana (maneja la plata) y Caro ponen 10.000 cada una; a Beto se le devuelven 20.000
+    expect(c.totalACobrar).toBe(20000);
     expect(c.totalADevolver).toBe(20000);
     expect(c.cobrado).toBe(4000);
     expect(c.transferencia).toBe(4000);
-    expect(c.pendienteCobrar).toBe(6000);
+    expect(c.pendienteCobrar).toBe(16000);
     expect(c.pendienteDevolver).toBe(20000);
     expect(c.alDia).toBe(0);
-    expect(c.personas).toBe(2);
+    expect(c.personas).toBe(3);
   });
 
   it('el ejemplo cierra: lo que queda en la caja es el fondo común', () => {

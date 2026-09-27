@@ -22,6 +22,7 @@ export function HojaPago({
   const devolucion = r.saldo < 0;
   const importe = Math.abs(r.saldo);
   const quien = administrador?.nombre ?? 'quien maneja la plata';
+  const esAdministrador = r.esAdministrador;
 
   const registrar = (metodo: MetodoPago) => {
     actualizar((e) => {
@@ -38,7 +39,7 @@ export function HojaPago({
     avisar(
       devolucion
         ? `Se le devolvieron ${dinero(importe)} a ${r.persona.nombre}`
-        : `${r.persona.nombre} pagó ${dinero(importe)} (${NOMBRE_METODO[metodo].toLowerCase()})`,
+        : `${r.persona.nombre} ${esAdministrador ? 'puso' : 'pagó'} ${dinero(importe)} (${NOMBRE_METODO[metodo].toLowerCase()})`,
     );
   };
 
@@ -49,7 +50,13 @@ export function HojaPago({
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 600 }}>{r.persona.nombre}</div>
           <div className="ayuda" style={{ marginTop: 1 }}>
-            {devolucion ? `${quien} le devuelve lo que puso de más` : `Le paga a ${quien}`}
+            {esAdministrador
+              ? devolucion
+                ? 'Saca de la caja lo que puso de más'
+                : 'Pone su parte en la caja'
+              : devolucion
+                ? `${quien} le devuelve lo que puso de más`
+                : `Le paga a ${quien}`}
           </div>
         </div>
         <strong style={{ fontSize: 18, color: devolucion ? 'var(--azul)' : 'var(--verde-700)' }}>{dinero(importe)}</strong>
