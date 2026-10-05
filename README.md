@@ -13,7 +13,8 @@ cada comida, cuánto le toca poner a cada uno y cómo quedan las cuentas con qui
 - **Comidas**: cada desayuno / almuerzo / merienda / cena, con menú y la lista de quiénes comieron
   (botón "Marcar a todos").
 - **Compras**: cualquiera puede comprar. Se anota quién compró, cuánto gastó, qué compró y para qué comida. Los **gastos generales** (nafta, alquiler…) no son de una
-  comida y se reparten en partes iguales entre todos.
+  comida y se reparten en partes iguales entre todos; con el botón **Redondear** se puede redondear hacia arriba lo que pone
+  cada uno, y lo que sobra va al fondo común.
 - **Cobro por persona** = gasto real ÷ comensales, **redondeado hacia arriba** al múltiplo elegido en el
   encuentro ($100, $500, $1.000…), o un **precio fijo** por comida.
 - **Fondo común**: lo que sobra por el redondeo. Queda para el grupo y lo guarda quien maneja la plata.
