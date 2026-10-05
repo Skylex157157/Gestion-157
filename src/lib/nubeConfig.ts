@@ -12,7 +12,14 @@ export interface ConfigFirebase {
   appId: string;
 }
 
-const CONFIG: ConfigFirebase | null = null;
+const CONFIG: ConfigFirebase | null = {
+  apiKey: 'AIzaSyBFsRiaJX6zycd-hZS2Mz-6E286fg-8Wxs',
+  authDomain: 'juntada-157.firebaseapp.com',
+  projectId: 'juntada-157',
+  storageBucket: 'juntada-157.firebasestorage.app',
+  messagingSenderId: '343611111931',
+  appId: '1:343611111931:web:5680fb72b93bd95501f35e',
+};
 
 /** Para probar contra el emulador local de Firestore (npm run emulador). */
 export const USAR_EMULADOR = import.meta.env.VITE_FIREBASE_EMULADOR === '1';
