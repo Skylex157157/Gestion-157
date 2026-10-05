@@ -66,6 +66,8 @@ export interface Encuentro {
   cerrado?: boolean;
   /** Archivado: ya terminó y no aparece en la lista de encuentros (se puede recuperar) */
   archivado?: boolean;
+  /** Compartido: se guarda también en la nube y lo pueden editar todos los que tienen el link */
+  compartido?: boolean;
   /** Foto de portada como data URL (opcional) */
   foto: string | null;
   personas: Persona[];

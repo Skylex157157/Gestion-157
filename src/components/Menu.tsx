@@ -15,6 +15,7 @@ import {
   Search,
   Share2,
   Upload,
+  UsersRound,
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import {
@@ -41,10 +42,12 @@ export function MenuLateral({
   onCerrar,
   onNuevo,
   onGestionar,
+  onEquipo,
 }: {
   onCerrar: () => void;
   onNuevo: () => void;
   onGestionar: (tab: 'activos' | 'archivados') => void;
+  onEquipo: () => void;
 }) {
   const { estado, encuentro, activar, reemplazarTodo, actualizar, archivarEncuentro } = useStore();
   const [busqueda, setBusqueda] = useState('');
@@ -170,6 +173,15 @@ export function MenuLateral({
               <div className="menu-sep" />
               <button className="menu-item" onClick={() => ir('/encuentro')}>
                 <Pencil size={20} /> Editar encuentro
+              </button>
+              <button
+                className="menu-item"
+                onClick={() => {
+                  onCerrar();
+                  onEquipo();
+                }}
+              >
+                <UsersRound size={20} /> {encuentro.compartido ? 'En equipo: link y estado' : 'Editar en equipo'}
               </button>
               <button className="menu-item" onClick={compartir}>
                 <Share2 size={20} /> Compartir resumen (WhatsApp)

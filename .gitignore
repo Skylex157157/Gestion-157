@@ -3,3 +3,10 @@ dist
 *.tsbuildinfo
 .DS_Store
 dist-artifact
+
+# Emulador de Firebase
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+.firebase/
+dist-emulador

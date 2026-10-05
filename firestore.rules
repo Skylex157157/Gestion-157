@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Reglas de Juntada: un encuentro compartido solo lo puede ver y editar quien
+// conoce su código (el que va en el link). Nadie puede listar los encuentros.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function codigoValido(id) {
+      return id.size() >= 20 && id.size() <= 40;
+    }
+
+    match /encuentros/{id} {
+      // "get" (leer uno sabiendo el código) sí; "list" (ver todos) no
+      allow get: if codigoValido(id);
+      allow create, update: if codigoValido(id)
+        && request.resource.data.nombre is string
+        && request.resource.data.nombre.size() <= 200;
+      allow delete: if false;
+
+      match /{coleccion}/{item} {
+        allow read: if codigoValido(id)
+          && coleccion in ['personas', 'comidas', 'compras', 'pagos', 'extra'];
+        allow write: if codigoValido(id)
+          && coleccion in ['personas', 'comidas', 'compras', 'pagos', 'extra']
+          && existsAfter(/databases/$(database)/documents/encuentros/$(id));
+      }
+    }
+  }
+}

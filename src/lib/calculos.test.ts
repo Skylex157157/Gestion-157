@@ -170,3 +170,13 @@ describe('resumenCobranza', () => {
     expect(g.fondo).toBeGreaterThan(0);
   });
 });
+
+describe('iguales', () => {
+  it('compara sin importar el orden de las claves', async () => {
+    const { iguales } = await import('./formato');
+    expect(iguales({ a: 1, b: [1, { c: 2, d: 3 }] }, { b: [1, { d: 3, c: 2 }], a: 1 })).toBe(true);
+    expect(iguales({ a: 1, b: undefined }, { a: 1 })).toBe(true);
+    expect(iguales({ a: 1 }, { a: 2 })).toBe(false);
+    expect(iguales([1, 2], [2, 1])).toBe(false);
+  });
+});

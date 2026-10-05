@@ -113,3 +113,19 @@ export const NOMBRE_METODO: Record<MetodoPago, string> = {
   efectivo: 'Efectivo',
   transferencia: 'Transferencia',
 };
+
+/** Compara dos datos (objetos, listas, valores) sin importar el orden de las claves. */
+export function iguales(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
+    // undefined y null cuentan como "sin valor"
+    return (a ?? null) === (b ?? null);
+  }
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => iguales(x, b[i]));
+  const oa = a as Record<string, unknown>;
+  const ob = b as Record<string, unknown>;
+  const claves = new Set([...Object.keys(oa), ...Object.keys(ob)]);
+  for (const k of claves) if (!iguales(oa[k], ob[k])) return false;
+  return true;
+}

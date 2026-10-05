@@ -69,7 +69,9 @@ export default function EditarEncuentro() {
 
   const borrar = async () => {
     const ok = await confirmar(
-      `Se va a borrar "${encuentro.nombre}" con todas sus comidas, compras y pagos. No se puede deshacer.`,
+      encuentro.compartido
+        ? `Se va a borrar "${encuentro.nombre}" de este teléfono. Es un encuentro compartido: los demás lo siguen teniendo.`
+        : `Se va a borrar "${encuentro.nombre}" con todas sus comidas, compras y pagos. No se puede deshacer.`,
       { aceptar: 'Borrar encuentro' },
     );
     if (!ok) return;

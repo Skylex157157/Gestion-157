@@ -35,7 +35,9 @@ export function GestionEncuentros({
 
   const borrar = async (e: Encuentro) => {
     const ok = await confirmar(
-      `Se va a borrar "${e.nombre}" con todas sus comidas, compras y pagos. No se puede deshacer. Si querés guardarlo, exportá una copia de seguridad antes (menú ☰ → Exportar datos).`,
+      e.compartido
+        ? `Se va a borrar "${e.nombre}" de este teléfono. Es un encuentro compartido: los demás lo siguen teniendo, y podés volver a entrar con el link.`
+        : `Se va a borrar "${e.nombre}" con todas sus comidas, compras y pagos. No se puede deshacer. Si querés guardarlo, exportá una copia de seguridad antes (menú ☰ → Exportar datos).`,
       { aceptar: 'Borrar para siempre' },
     );
     if (!ok) return;

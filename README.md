@@ -23,7 +23,23 @@ cada comida, cuánto le toca poner a cada uno y cómo quedan las cuentas con qui
   efectivo o transferencia. Si después cambian los montos, la diferencia vuelve a aparecer como pendiente.
 - **Informe / PDF**: resumen completo para imprimir o guardar como PDF.
 
-Los datos se guardan **solo en el teléfono** (almacenamiento del navegador). Desde el menú podés:
+Los datos se guardan **en el teléfono** (almacenamiento del navegador), salvo los encuentros que se comparten.
+
+### Editar en equipo
+
+Desde ☰ → **Editar en equipo** un encuentro se sube a la nube (Cloud Firestore) y se obtiene un link. Quien lo
+abre se suma al encuentro y todos ven los cambios al instante. Sin señal se sigue usando: los cambios se
+guardan en el teléfono y se envían cuando vuelve la conexión (la primera vez que se abre el link hace falta
+internet). Cualquiera que tenga el link puede editar; el link lleva un código largo al azar y las reglas de
+`firestore.rules` no dejan listar los encuentros. Los encuentros que no se comparten siguen solo en el teléfono.
+
+Cada persona, comida, compra y pago se guarda como un documento aparte, así dos personas que cargan cosas a la
+vez no se pisan (si editan lo mismo, queda el último cambio).
+
+Para conectarlo a un proyecto de Firebase: crear el proyecto y una base de Firestore, pegar las reglas de
+`firestore.rules` en *Firestore → Reglas*, y copiar la configuración de la app web en `src/lib/nubeConfig.ts`.
+
+Además, desde el menú podés:
 
 - **Compartir resumen**: texto listo para pegar en WhatsApp.
 - **Exportar / Importar datos**: copia de seguridad en un archivo `.json` (sirve para pasar los datos a otro teléfono).
@@ -37,6 +53,10 @@ npm install
 npm run dev      # servidor local
 npm test         # tests de los cálculos
 npm run build    # genera dist/
+
+# probar "Editar en equipo" sin tocar la nube real (necesita Java):
+npm run emulador      # emulador local de Firestore, con las reglas de firestore.rules
+npm run dev:emulador  # la app conectada al emulador
 ```
 
 Hecha con React + TypeScript + Vite.

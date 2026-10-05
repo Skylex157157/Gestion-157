@@ -4,8 +4,9 @@ import { useEncuentro } from '../lib/store';
 import { administradorEfectivo, ordenarComidas, resumenGeneral } from '../lib/calculos';
 import { dinero, fechaCorta, hoyISO, nombreComida } from '../lib/formato';
 import { Fila, IconoComida, Pantalla, avisar } from '../components/ui';
+import { EstadoNube } from '../components/Equipo';
 
-export default function Inicio({ onMenu }: { onMenu: () => void }) {
+export default function Inicio({ onMenu, onEquipo }: { onMenu: () => void; onEquipo: () => void }) {
   const { encuentro, archivarEncuentro } = useEncuentro();
   const navigate = useNavigate();
   const general = resumenGeneral(encuentro);
@@ -74,6 +75,11 @@ export default function Inicio({ onMenu }: { onMenu: () => void }) {
             {administrador && (
               <div className="fechas">
                 <Wallet size={12} style={{ verticalAlign: -1 }} /> Maneja la plata: {administrador.nombre}
+              </div>
+            )}
+            {encuentro.compartido && (
+              <div style={{ marginTop: 6 }}>
+                <EstadoNube encuentro={encuentro} onClick={onEquipo} />
               </div>
             )}
           </div>

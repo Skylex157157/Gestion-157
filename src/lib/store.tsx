@@ -1,6 +1,24 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Encuentro, Estado } from './types';
-import { nuevoId } from './formato';
+import { iguales, nuevoId } from './formato';
+import { NUBE_DISPONIBLE } from './nubeConfig';
+import type { CambioRemoto } from './nube';
+
+type ModuloNube = typeof import('./nube');
+let nube: Promise<ModuloNube> | null = null;
+/** Carga la parte de la nube solo cuando hace falta (es pesada y la mayoría de los encuentros no se comparten). */
+export function cargarNube(): Promise<ModuloNube> | null {
+  if (!NUBE_DISPONIBLE) return null;
+  nube ??= import('./nube');
+  return nube;
+}
+
+/** Código largo y al azar: es lo que hace falta conocer para entrar a un encuentro compartido. */
+function idSeguro(): string {
+  const letras = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const azar = crypto.getRandomValues(new Uint8Array(22));
+  return Array.from(azar, (n) => letras[n % letras.length]).join('');
+}
 
 const CLAVE = 'juntada:v1';
 
@@ -92,6 +110,10 @@ interface Contexto {
   archivarEncuentro: (id: string, archivar: boolean) => void;
   activar: (id: string) => void;
   reemplazarTodo: (e: Estado) => void;
+  /** Empieza a compartir un encuentro: lo sube a la nube y devuelve su código (cambia su id). */
+  compartirEncuentro: (id: string) => string | null;
+  /** Deja de sincronizar un encuentro: queda solo en este teléfono, como estaba. */
+  dejarDeCompartir: (id: string) => void;
   errorGuardado: string | null;
 }
 
@@ -100,6 +122,14 @@ const StoreContext = createContext<Contexto | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<Estado>(cargar);
   const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
+  // Copia siempre al día del estado, para calcular los cambios fuera de React y mandarlos a la nube
+  const ref = useRef(estado);
+  const cambiarEstado = useCallback((cambio: (prev: Estado) => Estado) => {
+    const nuevo = cambio(ref.current);
+    if (nuevo === ref.current) return;
+    ref.current = nuevo;
+    setEstado(nuevo);
+  }, []);
 
   useEffect(() => {
     try {
@@ -116,47 +146,106 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const actualizar = useCallback(
     (cambio: (e: Encuentro) => void) => {
-      setEstado((prev) => {
-        const activoId = idActivo(prev);
-        return {
-          ...prev,
-          encuentros: prev.encuentros.map((e) => {
-            if (e.id !== activoId) return e;
-            const copia = structuredClone(e);
-            cambio(copia);
-            return copia;
-          }),
-        };
-      });
+      const prev = ref.current;
+      const viejo = prev.encuentros.find((e) => e.id === idActivo(prev));
+      if (!viejo) return;
+      const copia = structuredClone(viejo);
+      cambio(copia);
+      cambiarEstado((p) => ({ ...p, encuentros: p.encuentros.map((e) => (e.id === viejo.id ? copia : e)) }));
+      if (viejo.compartido) cargarNube()?.then((n) => n.guardarCambios(viejo, copia));
     },
-    [],
+    [cambiarEstado],
   );
 
-  const agregarEncuentro = useCallback((e: Encuentro) => {
-    setEstado((prev) => ({ ...prev, encuentros: [...prev.encuentros, e], encuentroActivoId: e.id }));
-  }, []);
+  /** Mezcla en el encuentro lo que llegó de la nube (solo si algo cambió de verdad). */
+  const aplicarRemoto = useCallback(
+    (id: string, cambio: CambioRemoto) => {
+      cambiarEstado((prev) => {
+        const e = prev.encuentros.find((x) => x.id === id);
+        if (!e) return prev;
+        const distinto = (Object.keys(cambio) as (keyof CambioRemoto)[]).some((k) => !iguales(e[k], cambio[k]));
+        if (!distinto) return prev;
+        return { ...prev, encuentros: prev.encuentros.map((x) => (x.id === id ? { ...x, ...cambio } : x)) };
+      });
+    },
+    [cambiarEstado],
+  );
+
+  // Escucha los encuentros compartidos de este teléfono
+  const compartidos = estado.encuentros
+    .filter((e) => e.compartido)
+    .map((e) => e.id)
+    .join(',');
+  useEffect(() => {
+    const cargando = compartidos ? cargarNube() : null;
+    if (!cargando) return;
+    let activo = true;
+    let bajas: (() => void)[] = [];
+    cargando.then((n) => {
+      if (!activo) return;
+      bajas = compartidos.split(',').map((id) => n.escucharEncuentro(id, (c) => aplicarRemoto(id, c)));
+    });
+    return () => {
+      activo = false;
+      bajas.forEach((b) => b());
+    };
+  }, [compartidos, aplicarRemoto]);
+
+  const compartirEncuentro = useCallback(
+    (id: string) => {
+      const original = ref.current.encuentros.find((e) => e.id === id);
+      const cargando = cargarNube();
+      if (!original || !cargando) return null;
+      const compartido: Encuentro = { ...structuredClone(original), id: idSeguro(), compartido: true };
+      cargando.then((n) => n.subirEncuentro(compartido)).catch(() => {});
+      cambiarEstado((prev) => ({
+        ...prev,
+        encuentros: prev.encuentros.map((e) => (e.id === id ? compartido : e)),
+        encuentroActivoId: prev.encuentroActivoId === id ? compartido.id : prev.encuentroActivoId,
+      }));
+      return compartido.id;
+    },
+    [cambiarEstado],
+  );
+
+  const dejarDeCompartir = useCallback(
+    (id: string) => {
+      cambiarEstado((prev) => ({
+        ...prev,
+        encuentros: prev.encuentros.map((e) => (e.id === id ? { ...e, compartido: false } : e)),
+      }));
+    },
+    [cambiarEstado],
+  );
+
+  const agregarEncuentro = useCallback(
+    (e: Encuentro) => {
+      cambiarEstado((prev) => ({ ...prev, encuentros: [...prev.encuentros, e], encuentroActivoId: e.id }));
+    },
+    [cambiarEstado],
+  );
 
   const eliminarEncuentro = useCallback((id: string) => {
-    setEstado((prev) => ({
+    cambiarEstado((prev) => ({
       ...prev,
       encuentros: prev.encuentros.filter((e) => e.id !== id),
       encuentroActivoId: prev.encuentroActivoId === id ? null : prev.encuentroActivoId,
     }));
-  }, []);
+  }, [cambiarEstado]);
 
   const archivarEncuentro = useCallback((id: string, archivar: boolean) => {
-    setEstado((prev) => ({
+    cambiarEstado((prev) => ({
       ...prev,
       encuentros: prev.encuentros.map((e) => (e.id === id ? { ...e, archivado: archivar } : e)),
       encuentroActivoId: archivar && idActivo(prev) === id ? null : prev.encuentroActivoId,
     }));
-  }, []);
+  }, [cambiarEstado]);
 
   const activar = useCallback((id: string) => {
-    setEstado((prev) => ({ ...prev, encuentroActivoId: id }));
-  }, []);
+    cambiarEstado((prev) => ({ ...prev, encuentroActivoId: id }));
+  }, [cambiarEstado]);
 
-  const reemplazarTodo = useCallback((e: Estado) => setEstado(e), []);
+  const reemplazarTodo = useCallback((e: Estado) => cambiarEstado(() => e), [cambiarEstado]);
 
   return (
     <StoreContext.Provider
@@ -169,6 +258,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         archivarEncuentro,
         activar,
         reemplazarTodo,
+        compartirEncuentro,
+        dejarDeCompartir,
         errorGuardado,
       }}
     >

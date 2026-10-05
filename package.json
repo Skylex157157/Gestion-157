@@ -9,9 +9,12 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "build:artifact": "node scripts/artifact.mjs"
+    "build:artifact": "node scripts/artifact.mjs",
+    "emulador": "npx -y firebase-tools emulators:start --only firestore --project demo-juntada",
+    "dev:emulador": "VITE_FIREBASE_EMULADOR=1 vite"
   },
   "dependencies": {
+    "firebase": "^12.19.0",
     "lucide-react": "^1.48.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

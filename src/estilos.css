@@ -1400,3 +1400,53 @@ table.tabla {
   flex-shrink: 0;
   color: var(--verde-600);
 }
+
+/* Editar en equipo */
+.estado-nube {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  white-space: normal;
+  text-align: left;
+}
+.equipo-explica {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.equipo-explica svg {
+  color: var(--verde-700);
+  flex-shrink: 0;
+}
+.equipo-explica p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--texto-2);
+}
+.equipo-lista {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--texto-2);
+}
+.link-equipo {
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--verde-50);
+  border: 1px solid var(--borde);
+  font-size: 13px;
+  word-break: break-all;
+  user-select: all;
+}
+.girando {
+  animation: girar 1s linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}

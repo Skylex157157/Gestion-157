@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useMatch } from 'react-router-dom';
 import { useStore } from './lib/store';
 import { MenuLateral } from './components/Menu';
 import { NuevoEncuentro } from './components/NuevoEncuentro';
 import { GestionEncuentros } from './components/GestionEncuentros';
+import { HojaEquipo } from './components/Equipo';
 import { Confirmaciones, TextoParaCopiar, Toasts } from './components/ui';
 import Bienvenida from './pages/Bienvenida';
 import Inicio from './pages/Inicio';
@@ -21,12 +22,15 @@ import Cobranza from './pages/Cobranza';
 import EditarEncuentro from './pages/EditarEncuentro';
 import GastosGenerales from './pages/GastosGenerales';
 import Informe from './pages/Informe';
+import Unirse from './pages/Unirse';
 
 export default function App() {
   const { encuentro, errorGuardado } = useStore();
   const [menu, setMenu] = useState(false);
   const [nuevo, setNuevo] = useState(false);
   const [gestion, setGestion] = useState<'activos' | 'archivados' | null>(null);
+  const [equipo, setEquipo] = useState(false);
+  const uniendose = useMatch('/unirse/:id');
 
   return (
     <div className="app">
@@ -35,9 +39,13 @@ export default function App() {
           {errorGuardado}
         </div>
       )}
-      {encuentro ? (
+      {uniendose ? (
         <Routes>
-          <Route path="/" element={<Inicio onMenu={() => setMenu(true)} />} />
+          <Route path="/unirse/:id" element={<Unirse />} />
+        </Routes>
+      ) : encuentro ? (
+        <Routes>
+          <Route path="/" element={<Inicio onMenu={() => setMenu(true)} onEquipo={() => setEquipo(true)} />} />
           <Route path="/comidas" element={<Comidas />} />
           <Route path="/comidas/:id" element={<DetalleComida />} />
           <Route path="/comidas/:id/asistentes" element={<Asistentes />} />
@@ -59,10 +67,16 @@ export default function App() {
         <Bienvenida onNuevo={() => setNuevo(true)} onArchivados={() => setGestion('archivados')} />
       )}
       {menu && (
-        <MenuLateral onCerrar={() => setMenu(false)} onNuevo={() => setNuevo(true)} onGestionar={setGestion} />
+        <MenuLateral
+          onCerrar={() => setMenu(false)}
+          onNuevo={() => setNuevo(true)}
+          onGestionar={setGestion}
+          onEquipo={() => setEquipo(true)}
+        />
       )}
       {gestion && <GestionEncuentros inicial={gestion} onCerrar={() => setGestion(null)} />}
       {nuevo && <NuevoEncuentro onCerrar={() => setNuevo(false)} />}
+      {equipo && encuentro && <HojaEquipo onCerrar={() => setEquipo(false)} />}
       <Confirmaciones />
       <TextoParaCopiar />
       <Toasts />

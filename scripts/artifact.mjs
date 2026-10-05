@@ -8,7 +8,8 @@ rmSync('dist-artifact', { recursive: true, force: true });
 execSync(`npx vite build --mode artifact --outDir ${dist} --emptyOutDir`, { stdio: 'inherit' });
 
 const assets = readdirSync(`${dist}/assets`);
-const js = assets.find((f) => f.endsWith('.js'));
+// el JS principal (la parte de la nube no se usa dentro de claude.ai)
+const js = assets.find((f) => f.startsWith('index-') && f.endsWith('.js'));
 const css = assets.find((f) => f.endsWith('.css'));
 if (!js || !css) throw new Error('No se encontró el JS o el CSS del build');
 
