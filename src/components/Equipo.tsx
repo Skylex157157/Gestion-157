@@ -31,6 +31,7 @@ export function EstadoNube({ encuentro, onClick }: { encuentro: Encuentro; onCli
 /** Hoja para editar un encuentro entre varios: compartir el link, ver el estado y dejar de compartir. */
 export function HojaEquipo({ onCerrar }: { onCerrar: () => void }) {
   const { encuentro, compartirEncuentro, dejarDeCompartir } = useStore();
+  const sync = useEstadoSync(encuentro?.compartido ? encuentro.id : undefined);
   if (!encuentro) return null;
   const link = linkDeEquipo(encuentro.id);
 
@@ -110,7 +111,9 @@ export function HojaEquipo({ onCerrar }: { onCerrar: () => void }) {
         <EstadoNube encuentro={encuentro} />
       </div>
       <p className="ayuda" style={{ fontSize: 13.5, margin: '0 0 8px' }}>
-        Mandá este link a quien quieras sumar. Cualquiera que lo tenga puede editar.
+        {sync.conectado && !sync.pendientes
+          ? 'Mandá este link a quien quieras sumar. Cualquiera que lo tenga puede editar.'
+          : 'Esperá a que diga "al día" antes de mandar el link: hasta que el encuentro termine de subir, los demás no lo pueden abrir.'}
       </p>
       <div className="link-equipo">{link}</div>
       <div className="fila-flex" style={{ marginTop: 12 }}>

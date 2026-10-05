@@ -38,6 +38,8 @@ function base(): Firestore {
   const app = initializeApp(configFirebase);
   db = initializeFirestore(app, {
     ignoreUndefinedProperties: true,
+    // Solo para pruebas detrás de proxys que cortan las conexiones largas
+    ...(import.meta.env.VITE_FIREBASE_LONG_POLLING === '1' ? { experimentalForceLongPolling: true } : {}),
     localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   });
   if (USAR_EMULADOR) connectFirestoreEmulator(db, '127.0.0.1', 8080);

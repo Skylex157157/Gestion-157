@@ -42,7 +42,7 @@ export default function Unirse() {
 
   const [Icono, titulo, texto] =
     problema === 'no-existe'
-      ? [SearchX, 'No se encontró el encuentro', 'Revisá que el link esté completo, o pedile a quien te lo mandó que lo vuelva a enviar.']
+      ? [SearchX, 'No se encontró el encuentro', 'Si te lo acaban de mandar, puede que todavía se esté subiendo: probá de nuevo en un momento. Si no, revisá que el link esté completo.']
       : problema === 'sin-conexion'
         ? [CloudOff, 'Sin conexión', 'La primera vez hace falta internet para bajar el encuentro. Probá de nuevo cuando tengas señal.']
         : problema === 'sin-nube'
@@ -62,7 +62,7 @@ export default function Unirse() {
       </div>
       <h2>{titulo}</h2>
       <p>{texto}</p>
-      {problema === 'sin-conexion' && (
+      {(problema === 'sin-conexion' || problema === 'no-existe') && (
         <button className="btn" onClick={() => location.reload()}>
           Probar de nuevo
         </button>
