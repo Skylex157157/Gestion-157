@@ -99,7 +99,7 @@ export function encuentroEjemplo(): Encuentro {
       personaId: personas[2].id,
       comidaId: GASTOS_GENERALES,
       concepto: 'Nafta del viaje',
-      importe: 32000,
+      importe: 34000,
       creada: '2025-04-18T09:00:00',
     },
   );

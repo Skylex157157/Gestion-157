@@ -48,9 +48,17 @@ export interface ResumenGastosGenerales {
   total: number;
   /** Personas entre las que se reparte */
   personas: number;
+  /** Costo real por persona (total / personas) */
   porPersona: number;
-  /** Parte de cada persona en pesos enteros (los pesos que sobran de la división van a los primeros) */
+  /** Redondeo elegido (1 = exacto) */
+  redondeo: number;
+  /** Lo que pone cada uno: el costo real redondeado hacia arriba, o el costo real si es exacto */
+  cobroPorPersona: number;
+  /** Parte de cada persona en pesos enteros (sin redondeo, los pesos que sobran de la división van a los primeros) */
   reparto: Map<string, number>;
+  recaudado: number;
+  /** recaudado - total: lo que sobra por el redondeo y va al fondo común */
+  fondo: number;
 }
 
 export interface ResumenGeneral {
@@ -116,8 +124,13 @@ export function resumenGastosGenerales(enc: Encuentro): ResumenGastosGenerales {
     .filter((c) => c.comidaId === GASTOS_GENERALES)
     .reduce((s, c) => s + c.importe, 0);
   const n = enc.personas.length;
+  const redondeo = enc.redondeoGenerales && enc.redondeoGenerales > 1 ? enc.redondeoGenerales : 1;
+  const porPersona = n ? total / n : 0;
   const reparto = new Map<string, number>();
-  if (n > 0) {
+  if (n > 0 && redondeo > 1) {
+    const cobro = redondearArriba(porPersona, redondeo);
+    for (const p of enc.personas) reparto.set(p.id, cobro);
+  } else if (n > 0) {
     const base = Math.floor(total / n);
     let resto = total - base * n;
     for (const p of enc.personas) {
@@ -125,7 +138,17 @@ export function resumenGastosGenerales(enc: Encuentro): ResumenGastosGenerales {
       resto--;
     }
   }
-  return { total, personas: n, porPersona: n ? total / n : 0, reparto };
+  const recaudado = [...reparto.values()].reduce((s, v) => s + v, 0);
+  return {
+    total,
+    personas: n,
+    porPersona,
+    redondeo,
+    cobroPorPersona: redondeo > 1 ? redondearArriba(porPersona, redondeo) : porPersona,
+    reparto,
+    recaudado,
+    fondo: n ? recaudado - total : 0,
+  };
 }
 
 export function resumenGeneral(enc: Encuentro): ResumenGeneral {
@@ -134,7 +157,7 @@ export function resumenGeneral(enc: Encuentro): ResumenGeneral {
   const gastoComidas = comidas.reduce((s, c) => s + c.gastoReal, 0);
   const gastoReal = gastoComidas + generales.total;
   // Si no hay personas, nadie paga los gastos generales y los absorbe el fondo
-  const recaudado = comidas.reduce((s, c) => s + c.recaudado, 0) + (generales.personas ? generales.total : 0);
+  const recaudado = comidas.reduce((s, c) => s + c.recaudado, 0) + generales.recaudado;
   return {
     gastoReal,
     gastoComidas,
@@ -148,7 +171,7 @@ export function resumenGeneral(enc: Encuentro): ResumenGeneral {
 
 export function resumenPersonas(enc: Encuentro): ResumenPersona[] {
   const general = resumenGeneral(enc);
-  const { reparto } = resumenGastosGenerales(enc);
+  const { reparto, porPersona: costoGenerales } = resumenGastosGenerales(enc);
   const administradorId = administradorEfectivo(enc);
 
   return enc.personas.map((persona) => {
@@ -163,7 +186,7 @@ export function resumenPersonas(enc: Encuentro): ResumenPersona[] {
       aPagar += rc.cobroPorPersona;
     }
     const generales = reparto.get(persona.id) ?? 0;
-    costoReal += generales;
+    costoReal += costoGenerales;
     aPagar += generales;
     const compras = enc.compras.filter((c) => c.personaId === persona.id).reduce((s, c) => s + c.importe, 0);
     const neto = aPagar - compras;

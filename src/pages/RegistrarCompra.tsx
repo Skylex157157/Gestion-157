@@ -182,7 +182,7 @@ export default function RegistrarCompra() {
           </div>
           {comidaId === GASTOS_GENERALES && (
             <div className="ayuda">
-              Nafta, alquiler, limpieza… Se reparte en partes iguales entre todos y no suma al fondo común.
+              Nafta, alquiler, limpieza… Se reparte en partes iguales entre todos.
             </div>
           )}
           {intentado && errores.comida && <div className="error">{errores.comida}</div>}

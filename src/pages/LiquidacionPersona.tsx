@@ -122,7 +122,7 @@ export default function LiquidacionPersona() {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: 14 }}>Fondo común generado</div>
               <div className="ayuda" style={{ marginTop: 1 }}>
-                (por redondeo en sus comidas)
+                (por el redondeo de lo que le toca)
               </div>
             </div>
             <strong>{dinero(r.fondoGenerado)}</strong>

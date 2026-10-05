@@ -129,6 +129,20 @@ describe('gastos generales', () => {
     expect(general.gastoReal).toBe(40000);
     expect(general.fondo).toBe(0);
   });
+
+  it('se pueden redondear hacia arriba y lo que sobra va al fondo común', () => {
+    const enc = base();
+    enc.compras.push({ id: 'g', personaId: 'caro', comidaId: GASTOS_GENERALES, concepto: 'Nafta', importe: 10000, creada: '' });
+    enc.redondeoGenerales = 500;
+    const g = resumenGastosGenerales(enc);
+    expect(g.cobroPorPersona).toBe(3500); // 10.000 / 3 = 3.333 → 3.500
+    expect([...g.reparto.values()]).toEqual([3500, 3500, 3500]);
+    expect(g.fondo).toBe(500);
+    expect(resumenGeneral(enc).fondo).toBe(500);
+    expect(de(enc, 'ana').aPagar).toBe(10000 + 3500);
+    // lo que pone cada uno menos lo que compró cierra con el fondo
+    expect(resumenPersonas(enc).reduce((s, p) => s + p.neto, 0)).toBe(500);
+  });
 });
 
 describe('resumenCobranza', () => {

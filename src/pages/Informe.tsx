@@ -143,8 +143,11 @@ export default function Informe() {
         <section className="informe-seccion">
           <h2>Gastos generales</h2>
           <p className="informe-datos">
-            Total {dinero(gen.total)} · Se reparte entre {gen.personas} personas · {dinero(gen.porPersona)} por persona ·
-            No suma al fondo común
+            Total {dinero(gen.total)} · Se reparte entre {gen.personas} personas · Costo real {dinero(gen.porPersona)} por
+            persona
+            {gen.redondeo > 1
+              ? ` · Se cobra ${dinero(gen.cobroPorPersona)} (redondeado a ${dinero(gen.redondeo)}) · Fondo ${dinero(gen.fondo)}`
+              : ' · Sin redondeo, no suma al fondo común'}
           </p>
           <TablaCompras
             nombre={nombre}

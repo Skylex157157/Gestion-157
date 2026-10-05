@@ -58,6 +58,8 @@ export interface Encuentro {
   fechaFin: string;
   /** El cobro por persona se redondea hacia arriba a este múltiplo */
   redondeo: number;
+  /** Redondeo hacia arriba de lo que pone cada uno por gastos generales (1 o vacío = exacto) */
+  redondeoGenerales?: number;
   /** Quien maneja la plata: todos arreglan cuentas con esta persona, y guarda el fondo común */
   administradorId: string | null;
   /** Encuentro cerrado para liquidar. No bloquea los cambios. */
